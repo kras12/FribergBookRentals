@@ -1,5 +1,6 @@
 using FribergbookRentals.Data.Models;
 using FribergBookRentals.Data;
+using FribergBookRentals.Mapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,10 +15,13 @@ namespace FribergBookRentals
 
 			// Add services to the container.
 			var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+			
+			// Database
 			builder.Services.AddDbContext<ApplicationDbContext>(options =>
 				options.UseSqlServer(connectionString));
 			builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+			// Identity
 			builder.Services.AddDefaultIdentity<User>(options =>
 			{
 				options.SignIn.RequireConfirmedAccount = true;
@@ -31,6 +35,9 @@ namespace FribergBookRentals
 			})
 			.AddRoles<IdentityRole>()
 			.AddEntityFrameworkStores<ApplicationDbContext>();
+
+			// Automapper
+            builder.Services.AddAutoMapper(typeof(EntityToViewModelAutoMapperProfile), typeof(ViewModelToEntityMapperProfile));
 
             builder.Services.AddControllersWithViews();
 			builder.Services.AddRazorPages();
