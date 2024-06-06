@@ -154,6 +154,26 @@ namespace FribergBookRentalsTest
 			await Assert.ThrowsAsync<BookLoanExpiredException>(async () => await bookLoanRepository.ProlongBookLoanAsync(bookLoan, DateTime.Now.AddDays(BookLoanTime - 1)));
 		}
 
+		[Fact]
+		public async Task TestCloseExpiredBookLoans()
+		{
+			// Arrange
+			int numberOfActiveLoans = 15;
+			int numberOfExpiredLoans = 10;
+			var user = await GetDefaultUser();
+			await CreateBookLoans(user, numberOfActiveLoans, createActiveLoans: true, overrideStartTime: DateTime.Now.AddDays(-BookLoanTime / 2).Date);
+			await CreateBookLoans(user, numberOfExpiredLoans, createActiveLoans: true, overrideStartTime: DateTime.Now.AddDays(-BookLoanTime).Date);			
+
+			// Act
+			await bookLoanRepository.CloseExpiredBookLoans();
+
+			// Assert
+			var loans = await bookLoanRepository.GetAllBookLoansAsync();
+			Assert.Equal(numberOfActiveLoans + numberOfExpiredLoans, loans.Count);
+			Assert.Equal(numberOfActiveLoans, loans.Count(x => x.ClosedTime == null));
+			Assert.Equal(numberOfExpiredLoans, loans.Count(x => x.ClosedTime != null));
+		}
+
 		#endregion
 
 		#region Methods
