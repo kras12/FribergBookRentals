@@ -39,4 +39,10 @@
     <ProjectReference Include="..\FribergbookRentals.Data\FribergbookRentals.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Resources\BookList.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

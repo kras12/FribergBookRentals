@@ -1,4 +1,5 @@
-﻿using FribergbookRentals.Data.Models;
+﻿using FribergbookRentals.Data.Exceptions;
+using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Moq;
@@ -12,73 +13,181 @@ namespace FribergBookRentalsTest
 {
 	public class BookLoanTest : TestBase
 	{
-        #region Fields
+		#region Constants
 
-        IBookRepository bookRepository = new BookRepository(_dbContext);
-        IBookLoanRepository bookLoanRepository = new BookLoanRepository(_dbContext);
+		private const int BookLoanTime = 14;
+
+		#endregion
+
+		#region Fields
+
+		IBookRepository bookRepository;
+        IBookLoanRepository bookLoanRepository;
 
         #endregion
-        #region Methods
+
+        #region Constructors
+
+        public BookLoanTest() : base()
+        {
+			bookRepository = new BookRepository(_dbContext);
+			bookLoanRepository = new BookLoanRepository(_dbContext);
+		}
+
+        #endregion
+
+        #region Tests
 
         [Fact]
-		public async Task TestAddBookLoan()
+		public async Task TestCreateBookLoan()
 		{
-			BookLoan bookLoan = await CreateLoan();
+			// Arrange
+			var user = await GetDefaultUser();
 
-            var result = await bookLoanRepository.AddAsync(bookLoan);
-			var bookLoanUserResult = await bookLoanRepository.GetBookLoanByUserId(result.User.Id);
+			// Act
+			BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: true);
 
-			Assert.NotNull(result);
+			// Assert
+			var bookLoanUserResult = await bookLoanRepository.GetBookLoanByUserIdAsync(user.Id);
+
 			Assert.NotNull(bookLoanUserResult);
 			Assert.Equal(bookLoan.User.Id, bookLoanUserResult.User.Id);
 			Assert.Equal(bookLoan.StartTime, bookLoanUserResult.StartTime);
+            Assert.Equal(bookLoan.EndTime, bookLoanUserResult.EndTime);
         }
 
-		public async Task TestListActiveBookLoans()
-		{
-			await CreateLoan(10, onlyActiveLoans: false);
-			List<BookLoan> bookLoans = await GetBookLoans();
-
-			Assert.True(bookLoans.Count > 0);
-		}
-
-		public async Task TestListClosedBookLoans()
-		{
-			await CreateLoan(10, onlyActiveLoans: false);
-			List<BookLoan> bookLoans = await GetBookLoans();
-
-
-		}
-
-		private Task CreateLoan()
-		{
-			return CreateLoan(1);
-		}
-
-
-		private async Task CreateLoan(int numberOfLoans, bool onlyActiveLoans = true)
+		[Fact]
+		public async Task TestCloseBookLoan()
 		{
 			// Arrange
+			var user = await GetDefaultUser();
+			BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: true);
 
-			UserManager<User> userManager = CreateUserManagager();
-			User user = userManager.Users.First();
-			Book book = await bookRepository.GetBookById(1);
-			BookLoan bookLoan = new BookLoan(DateTime.Now, DateTime.Now.AddDays(14), user, book);
-			
+			// Act
+			var result = await bookLoanRepository.CloseLoanAsync(bookLoan);
 
-			//Act
-			
+			// Assert
+			Assert.NotNull(result);
+			Assert.NotNull(bookLoan.ClosedTime);
+			Assert.Equal(bookLoan.ClosedTime.Value.Date, DateTime.Now.Date);
+        }
 
-			//Assert
+		[Fact]
+		public async Task TestListActiveBookLoans()
+		{
+			// Arrange
+			int loanCount = 10;
+			var user = await GetDefaultUser();
+			await CreateBookLoans(user, loanCount, createActiveLoans: true);
 			
+			// Act
+			List<BookLoan> bookLoans = await GetBookLoans(user);
+
+			// Assert
+			Assert.True(bookLoans.Count == loanCount);
+			Assert.All(bookLoans, x => Assert.Equal(user.Id, x.User.Id));
+			Assert.All(bookLoans, x => Assert.False(x.ClosedTime.HasValue));
 		}
 
-		private async Task<List<BookLoan>> GetBookLoans()
+		[Fact]
+		public async Task TestListClosedBookLoans()
 		{
-			UserManager<User> userManager = CreateUserManagager();
-			User user = userManager.Users.First();
+			// Arrange
+			int loanCount = 10;
+			var user = await GetDefaultUser(); 
+			await CreateBookLoans(user, loanCount, createActiveLoans: false);
+
+			// Act
+			List<BookLoan> bookLoans = await GetBookLoans(user);
+
+			// Assert
+			Assert.True(bookLoans.Count == loanCount);
+			Assert.All(bookLoans, x => Assert.Equal(user.Id, x.User.Id));
+			Assert.All(bookLoans, x => Assert.True(x.ClosedTime.HasValue));
+		}
+
+		[InlineData(-BookLoanTime + 1)]
+		[InlineData(-BookLoanTime + 2)]
+		[InlineData(-BookLoanTime + 3)]
+		[InlineData(-BookLoanTime + 4)]
+		[InlineData(-BookLoanTime + 5)]
+		[InlineData(-BookLoanTime + 6)]
+		[InlineData(-BookLoanTime + 7)]
+		[InlineData(-BookLoanTime + 8)]
+		[InlineData(-BookLoanTime + 9)]
+		[InlineData(-BookLoanTime + 10)]
+		[InlineData(-BookLoanTime + 11)]
+		[InlineData(-BookLoanTime + 12)]
+		[InlineData(-BookLoanTime + 13)]
+		[InlineData(-BookLoanTime + 14)]
+		[Theory]
+		public async Task TestProlongActiveBookLoan(int offsetDays)
+		{
+			// Arrange
+			var user = await GetDefaultUser();
+			BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: true, overrideStartTime: DateTime.Now.AddDays(offsetDays));
+
+			// Act
+			BookLoan prolongedBookLoan = await bookLoanRepository.ProlongBookLoanAsync(bookLoan, DateTime.Now.AddDays(BookLoanTime - 1));
+
+			// Assert
+			Assert.Null(prolongedBookLoan.ClosedTime);
+			Assert.NotNull(prolongedBookLoan.EndTime);
+			Assert.True(prolongedBookLoan.EndTime.Value.Date == DateTime.Now.Date.AddDays(BookLoanTime - 1));
+			Assert.Equal(bookLoan.StartTime, prolongedBookLoan.StartTime);
+			Assert.Equal(bookLoan.User.Id, prolongedBookLoan.User.Id);
+			Assert.Equal(bookLoan.Book.BookId, prolongedBookLoan.Book.BookId);
+		}
+
+		[InlineData(-BookLoanTime)]
+		[InlineData(-BookLoanTime - 1)]
+		[InlineData(-BookLoanTime - 2)]
+		[Theory]
+		public async Task TestProlongClosedBookLoan(int offsetDays)
+		{
+			// Arrange
+			var user = await GetDefaultUser();
+			BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: false, overrideStartTime: DateTime.Now.AddDays(offsetDays));
+
+			// Act
+			// Assert
+			await Assert.ThrowsAsync<BookLoanExpiredException>(async () => await bookLoanRepository.ProlongBookLoanAsync(bookLoan, DateTime.Now.AddDays(BookLoanTime - 1)));
+		}
+
+		#endregion
+
+		#region Methods
+
+		private async Task<BookLoan> CreateBookLoan(User user, bool createActiveLoans, DateTime? overrideStartTime = null)
+		{
+			return (await CreateBookLoans(user, 1, createActiveLoans, overrideStartTime: overrideStartTime)).First();
+		}
+
+		private async Task<List<BookLoan>> CreateBookLoans(User user, int numberOfLoans, bool createActiveLoans, DateTime? overrideStartTime = null)
+		{
+			// Arrange
+			DateTime startTime = overrideStartTime ?? DateTime.Now;
+			List<Book> books = await bookRepository.GetBooksAsync();
+			List<BookLoan> result = new();
+
+			// Act
+			for (int i = 0; i < numberOfLoans; i++)
+			{
+				int bookIndex = i < books.Count ? i : books.Count - 1;
+				DateTime? closedTime = createActiveLoans ? null : startTime;
+
+				BookLoan bookLoan = new BookLoan(startTime, startTime.AddDays(BookLoanTime - 1), user, books[bookIndex]) { ClosedTime = closedTime };
+				await bookLoanRepository.AddAsync(bookLoan);
+				result.Add(bookLoan);
+			}
+			
+			return result;
+		}
+
+		private async Task<List<BookLoan>> GetBookLoans(User user)
+		{
 			IBookLoanRepository bookLoanRepository = new BookLoanRepository(_dbContext);
-			List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserId(user.Id);
+			List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
 			return bookLoans;
 		}
 

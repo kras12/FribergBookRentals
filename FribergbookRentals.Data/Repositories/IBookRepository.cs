@@ -9,12 +9,14 @@ namespace FribergbookRentals.Data.Repositories
 {
 	public interface IBookRepository
 	{
-		public Task<Book> AddBook(Book book);
+		public Task<Book> AddBookAsync(Book book);
 
-		public Task<List<Book>> AddBooks(List<Book> books);
+		public Task<List<Book>> AddBooksAsync(List<Book> books);
 
-		public Task<Book> GetBookById(int id);
+		public Task<List<Book>> GetBooksAsync();
 
-		public List<Book> SearchBooks(BookSearchInputDto searchInput);
+		public Task<Book?> GetBookByIdAsync(int id);
+
+		public Task<List<Book>> SearchBooksAsync(BookSearchInputDto searchInput);
 	}
 }

@@ -13,6 +13,8 @@ namespace FribergBookRentals.Data
 
 		#region Properties
 
+		public DbSet<Book> Books { get; set; }
+
 		public DbSet<BookLoan> BookLoans { get; set; }
 
 		#endregion

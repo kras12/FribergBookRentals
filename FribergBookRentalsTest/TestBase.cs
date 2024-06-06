@@ -10,7 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
-using FribergBookRentalsTest.Data;
 using FribergbookRentals.Data.Repositories;
 
 namespace FribergBookRentalsTest
@@ -21,11 +20,11 @@ namespace FribergBookRentalsTest
 
 		protected ApplicationDbContext _dbContext;
 
+		private User _defaultSeedUserData = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
 
 		private DbContextOptions<ApplicationDbContext> _options = new DbContextOptionsBuilder<ApplicationDbContext>()
-			.UseInMemoryDatabase("TestingMemoryDb")
+			.UseInMemoryDatabase($"TestingMemoryDb-{Guid.NewGuid()}")
 			.Options;
-
 
 		#endregion
 
@@ -36,7 +35,7 @@ namespace FribergBookRentalsTest
 			_dbContext = new ApplicationDbContext(_options);
 			_dbContext.Database.EnsureCreated();
 			SeedBooks();
-			SeedUsers();
+			SeedDefaultUser();
 		}
 
 
@@ -56,20 +55,25 @@ namespace FribergBookRentalsTest
 			_dbContext.Database.EnsureDeleted();
 		}
 
+		protected async Task<User> GetDefaultUser()
+		{
+			UserManager<User> userManager = CreateUserManagager();
+			return await userManager.FindByEmailAsync(_defaultSeedUserData.Email!) ?? throw new Exception("Default user not found");
+		}
+
 		private void SeedBooks()
 		{
 			var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "BookList.txt"));
 			var mockBooks = JsonSerializer.Deserialize<List<Book>>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 			
 			IBookRepository bookRepository = new BookRepository(_dbContext);
-			bookRepository.AddBooks(mockBooks!).Wait();
+			bookRepository.AddBooksAsync(mockBooks!).Wait();
 		}
 
-		private void SeedUsers()
+		private void SeedDefaultUser()
 		{
-			User newUser = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
 			UserManager<User> userManager = CreateUserManagager();
-			userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd").Wait();
+			userManager.CreateAsync(_defaultSeedUserData, "Ab1slkdjflksdfjlksd").Wait();
 		}
 
 		#endregion

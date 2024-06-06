@@ -24,22 +24,33 @@ namespace FribergBookRentalsTest
 			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe") },
 
 
-			new object[] { new BookSearchInputDto(language: "Nigeria") },
+			new object[] { new BookSearchInputDto(language: "English") },
 			new object[] { new BookSearchInputDto(year: 1958) },
-			new object[] { new BookSearchInputDto(language: "Nigeria", year: 1958) },
+			new object[] { new BookSearchInputDto(language: "English", year: 1958) },
 
-			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart", language: "Nigeria") },
+			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart", language: "English") },
 			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart", year: 1958) },
-			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart", language: "Nigeria", year: 1958) },
+			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart", language: "English", year: 1958) },
 
-			new object[] { new BookSearchInputDto(searchPhrase: "Chinua Achebe", language: "Nigeria") },
+			new object[] { new BookSearchInputDto(searchPhrase: "Chinua Achebe", language: "English") },
 			new object[] { new BookSearchInputDto(searchPhrase: "Chinua Achebe", year: 1958) },
-			new object[] { new BookSearchInputDto(searchPhrase: "Chinua Achebe", language: "Nigeria", year: 1958) },
+			new object[] { new BookSearchInputDto(searchPhrase: "Chinua Achebe", language: "English", year: 1958) },
 
-			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe", language: "Nigeria") },
+			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe", language: "English") },
 			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe", year: 1958) },
-			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe", language: "Nigeria", year: 1958) },
+			new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe", language: "English", year: 1958) },
 		};
+
+		IBookRepository _bookRepository;
+
+		#endregion
+
+		#region Constructors
+
+		public BookSearchTest()
+		{
+			_bookRepository = new BookRepository(_dbContext);
+		}
 
 		#endregion
 
@@ -49,10 +60,10 @@ namespace FribergBookRentalsTest
 		[MemberData(nameof(_bookSearchInputData))]
 		public async Task TestSearchBooks(BookSearchInputDto searchInput)
 		{
-			IBookRepository bookRepository = new BookRepository(_dbContext);
+			// Act
+			var books = await _bookRepository.SearchBooksAsync(searchInput);
 
-			var books = bookRepository.SearchBooks(searchInput);
-
+			// Assert
 			Assert.NotEmpty(books);
 
 			if (searchInput.SearchPhrase != null)
@@ -60,17 +71,17 @@ namespace FribergBookRentalsTest
 				var searchPhraseParts = searchInput.SearchPhrase.Split(' ', StringSplitOptions.TrimEntries);
 				Assert.True(searchPhraseParts.Length > 0);
 
-				Assert.Collection(books, (book) => Assert.Contains(searchPhraseParts, x => book.Title.Contains(x) || book.Author.Contains(x)));
+				Assert.All(books, (book) => Assert.Contains(searchPhraseParts, x => book.Title.Contains(x) || book.Author.Contains(x)));
 			}
 
 			if (searchInput.Language != null)
 			{
-				Assert.Collection(books, (book) => Assert.Equal(searchInput.Language, book.Language));
+				Assert.All(books, (book) => Assert.Equal(searchInput.Language, book.Language));
 			}
 
 			if (searchInput.Year != null)
 			{
-				Assert.Collection(books, (book) => Assert.Equal(searchInput.Year, book.Year));
+				Assert.All(books, (book) => Assert.Equal(searchInput.Year, book.Year));
 			}
 		}
 

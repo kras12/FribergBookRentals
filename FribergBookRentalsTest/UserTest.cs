@@ -8,8 +8,6 @@ namespace FribergBookRentalsTest
 {
 	public class UserTest : TestBase
 	{
-		
-
 		#region Methods
 
 		[Fact]
@@ -57,7 +55,20 @@ namespace FribergBookRentalsTest
             Assert.True(passwordTest);
         }
 
-		
-        #endregion
-    }
+		[Fact]
+		public async Task TestUserLogout()
+		{
+            User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
+            UserManager<User> userManager = CreateUserManagager();
+
+            var createResult = await userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
+            var fetchedUser = await userManager.FindByEmailAsync("kalle@ankeborg.com");
+
+            // Inne i en controller:
+            // User.Identity.IsAuthenticated
+        }
+
+
+		#endregion
+	}
 }
