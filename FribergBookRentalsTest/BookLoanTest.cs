@@ -106,20 +106,7 @@ namespace FribergBookRentalsTest
 			Assert.All(bookLoans, x => Assert.True(x.ClosedTime.HasValue));
 		}
 
-		[InlineData(-BookLoanTime + 1)]
-		[InlineData(-BookLoanTime + 2)]
-		[InlineData(-BookLoanTime + 3)]
-		[InlineData(-BookLoanTime + 4)]
-		[InlineData(-BookLoanTime + 5)]
-		[InlineData(-BookLoanTime + 6)]
-		[InlineData(-BookLoanTime + 7)]
-		[InlineData(-BookLoanTime + 8)]
-		[InlineData(-BookLoanTime + 9)]
-		[InlineData(-BookLoanTime + 10)]
-		[InlineData(-BookLoanTime + 11)]
-		[InlineData(-BookLoanTime + 12)]
-		[InlineData(-BookLoanTime + 13)]
-		[InlineData(-BookLoanTime + 14)]
+		[MemberData(nameof(GetTestProlongActiveBookLoanInputData))]
 		[Theory]
 		public async Task TestProlongActiveBookLoan(int offsetDays)
 		{
@@ -139,9 +126,7 @@ namespace FribergBookRentalsTest
 			Assert.Equal(bookLoan.Book.BookId, prolongedBookLoan.Book.BookId);
 		}
 
-		[InlineData(-BookLoanTime)]
-		[InlineData(-BookLoanTime - 1)]
-		[InlineData(-BookLoanTime - 2)]
+		[MemberData(nameof(GetTestProlongClosedBookLoanInputData))]
 		[Theory]
 		public async Task TestProlongClosedBookLoan(int offsetDays)
 		{
@@ -209,6 +194,30 @@ namespace FribergBookRentalsTest
 			IBookLoanRepository bookLoanRepository = new BookLoanRepository(_dbContext);
 			List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
 			return bookLoans;
+		}
+
+		public static IEnumerable<object[]> GetTestProlongActiveBookLoanInputData()
+		{
+			List<object[]> data = new List<object[]>();
+
+			for (int i = -BookLoanTime + 1; i <= 0; i++)
+			{
+				data.Add(new object[] { i });
+			}
+
+			return data;
+		}
+
+		public static IEnumerable<object[]> GetTestProlongClosedBookLoanInputData()
+		{
+			List<object[]> data = new List<object[]>();
+
+			for (int i = -BookLoanTime; i >= -BookLoanTime - 2; i--)
+			{
+				data.Add(new object[] { i });
+			}
+
+			return data;
 		}
 
 		#endregion
