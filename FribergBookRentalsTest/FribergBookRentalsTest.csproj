@@ -37,6 +37,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FribergbookRentals.Data\FribergbookRentals.Data.csproj" />
+    <ProjectReference Include="..\FribergBookRentals\FribergBookRentals.csproj" />
   </ItemGroup>
 
   <ItemGroup>
