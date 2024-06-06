@@ -10,6 +10,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\**" />
+    <Compile Remove="Mapping\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <EmbeddedResource Remove="Mapping\**" />
+    <None Remove="Data\**" />
+    <None Remove="Mapping\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.6" />
@@ -28,11 +37,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\FribergbookRentals.Data\FribergbookRentals.Data.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Data\" />
-    <Folder Include="Mapping\" />
   </ItemGroup>
 
 </Project>
