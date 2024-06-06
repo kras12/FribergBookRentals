@@ -24,11 +24,11 @@ namespace FribergBookRentalsTest
 		IBookRepository bookRepository;
         IBookLoanRepository bookLoanRepository;
 
-        #endregion
+		#endregion
 
-        #region Constructors
+		#region Constructors
 
-        public BookLoanTest() : base()
+		public BookLoanTest() : base()
         {
 			bookRepository = new BookRepository(_dbContext);
 			bookLoanRepository = new BookLoanRepository(_dbContext);
@@ -119,8 +119,7 @@ namespace FribergBookRentalsTest
 
 			// Assert
 			Assert.Null(prolongedBookLoan.ClosedTime);
-			Assert.NotNull(prolongedBookLoan.EndTime);
-			Assert.True(prolongedBookLoan.EndTime.Value.Date == DateTime.Now.Date.AddDays(BookLoanTime - 1));
+			Assert.True(prolongedBookLoan.EndTime.Date == DateTime.Now.Date.AddDays(BookLoanTime - 1));
 			Assert.Equal(bookLoan.StartTime, prolongedBookLoan.StartTime);
 			Assert.Equal(bookLoan.User.Id, prolongedBookLoan.User.Id);
 			Assert.Equal(bookLoan.Book.BookId, prolongedBookLoan.Book.BookId);
