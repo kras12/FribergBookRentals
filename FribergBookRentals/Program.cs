@@ -18,7 +18,7 @@ namespace FribergBookRentals
 				options.UseSqlServer(connectionString));
 			builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-			builder.Services.AddIdentity<User, IdentityRole>(options =>
+			builder.Services.AddDefaultIdentity<User>(options =>
 			{
 				options.SignIn.RequireConfirmedAccount = true;
 				options.User.RequireUniqueEmail = true;
@@ -32,7 +32,8 @@ namespace FribergBookRentals
 			.AddRoles<IdentityRole>()
 			.AddEntityFrameworkStores<ApplicationDbContext>();
 
-			builder.Services.AddControllersWithViews();
+            builder.Services.AddControllersWithViews();
+			builder.Services.AddRazorPages();
 
 			var app = builder.Build();
 
