@@ -54,7 +54,17 @@ namespace FribergbookRentals.Data.Repositories
 			return await _applicationDbContext.BookLoans.ToListAsync();
 		}
 
-		public async Task<List<BookLoan>> GetBookLoansByUserIdAsync(string userId)
+        public Task<List<BookLoan>> GetActiveBookLoansAsync(string userId)
+		{
+			return _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.ClosedTime == null).ToListAsync();
+		}
+
+        public Task<List<BookLoan>> GetClosedBookLoansAsync(string userId)
+		{
+            return _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.ClosedTime != null).ToListAsync();
+        }
+
+        public async Task<List<BookLoan>> GetBookLoansByUserIdAsync(string userId)
 		{
             return await _applicationDbContext.BookLoans.Where(b => b.User.Id == userId).ToListAsync();
         }

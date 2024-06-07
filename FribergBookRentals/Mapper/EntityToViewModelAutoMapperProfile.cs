@@ -9,6 +9,7 @@ namespace FribergBookRentals.Mapper
         public EntityToViewModelAutoMapperProfile()
         {
             CreateMap<Book, BookViewModel>();
+            CreateMap<BookLoan, BookLoanViewModel>();
         }
     }
 }
