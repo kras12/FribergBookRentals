@@ -20,13 +20,15 @@ namespace FribergBookRentalsTest
 {
 	public abstract class TestBase
 	{
-		#region Fields
+        #region Fields
 
-		protected ApplicationDbContext _dbContext;
+        protected ApplicationDbContext _dbContext;
 
-		private User _defaultSeedUserData = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
+		protected User _defaultSeedUserData = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
 
-		private DbContextOptions<ApplicationDbContext> _options = new DbContextOptionsBuilder<ApplicationDbContext>()
+		protected const string DefaultUserPassword = "Aa!12345678";
+
+        private DbContextOptions<ApplicationDbContext> _options = new DbContextOptionsBuilder<ApplicationDbContext>()
 			.UseInMemoryDatabase($"TestingMemoryDb-{Guid.NewGuid()}")
 			.Options;
 
@@ -106,7 +108,7 @@ namespace FribergBookRentalsTest
 
 		private void SeedDefaultUser()
 		{
-            _userManager.Object.CreateAsync(_defaultSeedUserData, "Aa!12345678").Wait();
+            _userManager.Object.CreateAsync(_defaultSeedUserData, DefaultUserPassword).Wait();
 			var user = _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!).Result;
 			_userManager.Object.AddToRoleAsync(user!, ApplicationUserRoles.Member);
         }
