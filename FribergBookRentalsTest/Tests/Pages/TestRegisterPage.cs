@@ -18,7 +18,6 @@ namespace FribergBookRentalsTest.Tests.Pages
         {
             //Arrange
 
-            var userStore = new UserStore<User>(_dbContext);
             var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, new HttpContextAccessor(), new Mock<IUserClaimsPrincipalFactory<User>>().Object, null, null, null, null);
             var emailSender = new Mock<Microsoft.AspNetCore.Identity.UI.Services.IEmailSender>();
 
@@ -33,7 +32,7 @@ namespace FribergBookRentalsTest.Tests.Pages
             newUserInput.Password = "Aa!12345678";
             newUserInput.ConfirmPassword = "Aa!12345678";
 
-            var registerPage = new Mock<RegisterModel>(_userManager.Object, userStore, signingManagerMock.Object, emailSender.Object);
+            var registerPage = new Mock<RegisterModel>(_userManager.Object, _userStore, signingManagerMock.Object, emailSender.Object);
             registerPage.Setup(x => x.GetCallBackUrl(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(string.Empty);
             registerPage.Setup(x => x.OnPostAsync(It.IsAny<string>())).CallBase();
             registerPage.SetupGet(x => x.Input).CallBase();
