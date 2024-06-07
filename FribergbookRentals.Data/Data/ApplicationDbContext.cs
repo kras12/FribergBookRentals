@@ -1,4 +1,6 @@
-﻿using FribergbookRentals.Data.Models;
+﻿using FribergbookRentals.Data.Constants;
+using FribergbookRentals.Data.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,6 +19,25 @@ namespace FribergBookRentals.Data
 
 		public DbSet<BookLoan> BookLoans { get; set; }
 
-		#endregion
-	}
+        #endregion
+
+        #region Methods
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            base.OnModelCreating(builder);
+
+			builder.Entity<IdentityRole>()
+				.HasData(
+					new IdentityRole
+					{
+                        Id = "7e648d4e-a530-4cd4-b8d7-8be891780f71",
+                        Name = ApplicationUserRoles.Member,
+                        NormalizedName = ApplicationUserRoles.Member.ToUpper(),
+                    }				
+				);
+        }
+
+        #endregion
+    }
 }

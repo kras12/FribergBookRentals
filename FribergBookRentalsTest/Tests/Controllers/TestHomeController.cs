@@ -67,7 +67,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
             BookSearchInputViewModel searchInput = new BookSearchInputViewModel();
 
-            var result = await homeController.Search(searchInput);
+            var result = await homeController.Index(searchInput);
             var viewResult = (ViewResult)result;
             var foundBooks = (List<BookViewModel>)viewResult.Model!;
 

@@ -16,13 +16,12 @@ namespace FribergBookRentalsTest.Tests.Repositories
             //Arrange
 
             User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
-            UserManager<User> userManager = CreateUserManagager();
 
             //Act
 
-            var createResult = await userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
-            var fetchedUser = await userManager.FindByEmailAsync("kalle@ankeborg.com");
-            var passwordTest = await userManager.CheckPasswordAsync(fetchedUser!, "Ab1slkdjflksdfjlksd");
+            var createResult = await _userManager.Object.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
+            var fetchedUser = await _userManager.Object.FindByEmailAsync("kalle@ankeborg.com");
+            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, "Ab1slkdjflksdfjlksd");
 
             //Assert
 
@@ -40,12 +39,11 @@ namespace FribergBookRentalsTest.Tests.Repositories
             //Arrange
 
             User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
-            UserManager<User> userManager = CreateUserManagager();
 
             //Act
-            var createResult = await userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
-            var fetchedUser = await userManager.FindByEmailAsync("kalle@ankeborg.com");
-            var passwordTest = await userManager.CheckPasswordAsync(fetchedUser!, "Ab1slkdjflksdfjlksd");
+            var createResult = await _userManager.Object.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
+            var fetchedUser = await _userManager.Object.FindByEmailAsync("kalle@ankeborg.com");
+            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, "Ab1slkdjflksdfjlksd");
 
             //Assert
 
@@ -55,18 +53,20 @@ namespace FribergBookRentalsTest.Tests.Repositories
             Assert.True(passwordTest);
         }
 
-        [Fact]
-        public async Task TestUserLogout()
-        {
-            User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
-            UserManager<User> userManager = CreateUserManagager();
 
-            var createResult = await userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
-            var fetchedUser = await userManager.FindByEmailAsync("kalle@ankeborg.com");
+        // TODO - Remove
+        //[Fact]
+        //public async Task TestUserLogout()
+        //{
+        //    User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
+        //    UserManager<User> userManager = CreateUserManagager();
 
-            // Inne i en controller:
-            // User.Identity.IsAuthenticated
-        }
+        //    var createResult = await userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
+        //    var fetchedUser = await userManager.FindByEmailAsync("kalle@ankeborg.com");
+
+        //    // Inne i en controller:
+        //    // User.Identity.IsAuthenticated
+        //}
 
 
         #endregion

@@ -1,9 +1,12 @@
+using FribergbookRentals.Data.Constants;
 using FribergbookRentals.Data.Models;
+using FribergbookRentals.Data.Repositories;
 using FribergBookRentals.Data;
 using FribergBookRentals.Mapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security.Claims;
 
 namespace FribergBookRentals
 {
@@ -21,6 +24,10 @@ namespace FribergBookRentals
 				options.UseSqlServer(connectionString));
 			builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+			// Repositories
+			builder.Services.AddTransient<IBookLoanRepository, BookLoanRepository>();
+            builder.Services.AddTransient<IBookRepository, BookRepository>();
+
 			// Identity
 			builder.Services.AddDefaultIdentity<User>(options =>
 			{
@@ -33,14 +40,21 @@ namespace FribergBookRentals
 				options.Password.RequireNonAlphanumeric = true;
 				options.Password.RequiredLength = 8;
 			})
+			//.AddDefaultTokenProviders()
 			.AddRoles<IdentityRole>()
 			.AddEntityFrameworkStores<ApplicationDbContext>();
 
-			// Automapper
+			//builder.Services.AddAuthorizationCore(options =>
+			//{
+			//	options.AddPolicy(ApplicationPolicies.Member, policy =>
+			//		policy.RequireClaim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member));
+			//});
+			
+            // Automapper
             builder.Services.AddAutoMapper(typeof(EntityToViewModelAutoMapperProfile), typeof(ViewModelToEntityMapperProfile));
 
             builder.Services.AddControllersWithViews();
-			builder.Services.AddRazorPages();
+			//builder.Services.AddRazorPages();
 
 			var app = builder.Build();
 

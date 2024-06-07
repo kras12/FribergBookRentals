@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using FribergbookRentals.Data.Repositories;
+using Moq;
+using FribergbookRentals.Data.Migrations;
+using Microsoft.Extensions.Logging;
+using FribergbookRentals.Data.Constants;
 
 namespace FribergBookRentalsTest
 {
@@ -26,29 +30,59 @@ namespace FribergBookRentalsTest
 			.UseInMemoryDatabase($"TestingMemoryDb-{Guid.NewGuid()}")
 			.Options;
 
-		#endregion
+		protected readonly Mock<UserManager<User>> _userManager;
 
-		#region Constructors
+		protected readonly UserStore<User> _userStore;
 
-		protected TestBase()
+        #endregion
+
+        #region Constructors
+
+        protected TestBase()
 		{
 			_dbContext = new ApplicationDbContext(_options);
-			_dbContext.Database.EnsureCreated();
-			SeedBooks();
-			SeedDefaultUser();
-		}
+            _dbContext.Database.EnsureCreated();
+			
+			_userStore = CreateUserStore();
+			_userManager = CreateUserManager();
 
+            SeedBooks();
+            SeedDefaultUser();
+        }
 
-		#endregion
+        #endregion
 
-		#region Methods
+        #region Methods
 
-		protected UserManager<User> CreateUserManagager()
+        private Mock<UserManager<User>> CreateUserManager()
 		{
-			IUserStore<User> store = new UserStore<User>(_dbContext);
-			UserManager<User> userManager = new UserManager<User>(store, null, new PasswordHasher<User>(), null, null, null, null, null, null);
-			return userManager;
+			if (_userStore == null)
+			{
+				throw new NullReferenceException(nameof(_userStore));
+			}
+
+			var mockedLogger = new Mock<ILogger<UserManager<User>>>();
+
+            Mock<UserManager<User>> userManager = new Mock<UserManager<User>>(_userStore, null, 
+				new PasswordHasher<User>(), null, new List<PasswordValidator<User>>() { new PasswordValidator<User>() }, 
+                new UpperInvariantLookupNormalizer(), null, null, mockedLogger.Object);
+
+			userManager.Setup(x => x.GenerateEmailConfirmationTokenAsync(It.IsAny<User>())).Returns(Task.FromResult("x"));
+			userManager.Setup(x => x.CreateAsync(It.IsAny<User>())).CallBase();
+			userManager.Setup(x => x.CreateAsync(It.IsAny<User>(), It.IsAny<string>())).CallBase();
+            userManager.Setup(x => x.CheckPasswordAsync(It.IsAny<User>(), It.IsAny<string>())).CallBase();
+			userManager.Setup(x => x.GetRolesAsync(It.IsAny<User>())).CallBase();
+            userManager.Setup(x => x.AddToRoleAsync(It.IsAny<User>(), It.IsAny<string>())).CallBase();
+            userManager.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).CallBase();
+            userManager.CallBase = true;
+
+            return userManager;
 		}
+
+		private UserStore<User> CreateUserStore()
+		{
+			return new UserStore<User>(_dbContext);
+        }
 
 		public void Dispose()
 		{
@@ -57,8 +91,8 @@ namespace FribergBookRentalsTest
 
 		protected async Task<User> GetDefaultUser()
 		{
-			UserManager<User> userManager = CreateUserManagager();
-			return await userManager.FindByEmailAsync(_defaultSeedUserData.Email!) ?? throw new Exception("Default user not found");
+			
+			return await _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!) ?? throw new Exception("Default user not found");
 		}
 
 		private void SeedBooks()
@@ -72,9 +106,10 @@ namespace FribergBookRentalsTest
 
 		private void SeedDefaultUser()
 		{
-			UserManager<User> userManager = CreateUserManagager();
-			userManager.CreateAsync(_defaultSeedUserData, "Ab1slkdjflksdfjlksd").Wait();
-		}
+            _userManager.Object.CreateAsync(_defaultSeedUserData, "Aa!12345678").Wait();
+			var user = _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!).Result;
+			_userManager.Object.AddToRoleAsync(user!, ApplicationUserRoles.Member);
+        }
 
 		#endregion
 	}
