@@ -1,6 +1,7 @@
 ﻿using FribergbookRentals.Data.Exceptions;
 using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
+using FribergBookRentalsTest.Helpers;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using System;
@@ -43,9 +44,10 @@ namespace FribergBookRentalsTest.Tests.Repositories
         {
             // Arrange
             var user = await GetDefaultUser();
+            var book = (await bookRepository.GetBooksAsync()).First(); 
 
             // Act
-            BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: true);
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
 
             // Assert
             var bookLoanUserResult = await bookLoanRepository.GetBookLoanByUserIdAsync(user.Id);
@@ -61,7 +63,8 @@ namespace FribergBookRentalsTest.Tests.Repositories
         {
             // Arrange
             var user = await GetDefaultUser();
-            BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: true);
+            var book = (await bookRepository.GetBooksAsync()).First();
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
 
             // Act
             var result = await bookLoanRepository.CloseLoanAsync(bookLoan);
@@ -78,10 +81,11 @@ namespace FribergBookRentalsTest.Tests.Repositories
             // Arrange
             int loanCount = 10;
             var user = await GetDefaultUser();
-            await CreateBookLoans(user, loanCount, createActiveLoans: true);
+            var books = (await bookRepository.GetBooksAsync()).Take(loanCount).ToList();
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books, createActiveLoans: true, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
 
             // Act
-            List<BookLoan> bookLoans = await GetBookLoans(user);
+            List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
 
             // Assert
             Assert.True(bookLoans.Count == loanCount);
@@ -95,10 +99,11 @@ namespace FribergBookRentalsTest.Tests.Repositories
             // Arrange
             int loanCount = 10;
             var user = await GetDefaultUser();
-            await CreateBookLoans(user, loanCount, createActiveLoans: false);
+            var books = (await bookRepository.GetBooksAsync()).Take(loanCount).ToList();
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books, createActiveLoans: false, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
 
             // Act
-            List<BookLoan> bookLoans = await GetBookLoans(user);
+            List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
 
             // Assert
             Assert.True(bookLoans.Count == loanCount);
@@ -112,7 +117,9 @@ namespace FribergBookRentalsTest.Tests.Repositories
         {
             // Arrange
             var user = await GetDefaultUser();
-            BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: true, overrideStartTime: DateTime.Now.AddDays(offsetDays));
+            var book = (await bookRepository.GetBooksAsync()).First();
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, 
+                startTime: DateTime.Now.AddDays(offsetDays), endTime: DateTime.Now.AddDays(offsetDays).AddDays(BookLoanTime - 1));
 
             // Act
             BookLoan prolongedBookLoan = await bookLoanRepository.ProlongBookLoanAsync(bookLoan, DateTime.Now.AddDays(BookLoanTime - 1));
@@ -131,7 +138,9 @@ namespace FribergBookRentalsTest.Tests.Repositories
         {
             // Arrange
             var user = await GetDefaultUser();
-            BookLoan bookLoan = await CreateBookLoan(user, createActiveLoans: false, overrideStartTime: DateTime.Now.AddDays(offsetDays));
+            var book = (await bookRepository.GetBooksAsync()).First();
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: false,
+                startTime: DateTime.Now.AddDays(offsetDays), endTime: DateTime.Now.AddDays(offsetDays).AddDays(BookLoanTime - 1));
 
             // Act
             // Assert
@@ -145,8 +154,14 @@ namespace FribergBookRentalsTest.Tests.Repositories
             int numberOfActiveLoans = 15;
             int numberOfExpiredLoans = 10;
             var user = await GetDefaultUser();
-            await CreateBookLoans(user, numberOfActiveLoans, createActiveLoans: true, overrideStartTime: DateTime.Now.AddDays(-BookLoanTime / 2).Date);
-            await CreateBookLoans(user, numberOfExpiredLoans, createActiveLoans: true, overrideStartTime: DateTime.Now.AddDays(-BookLoanTime).Date);
+            var books = await bookRepository.GetBooksAsync();
+            DateTime startTimeActiveLoans = DateTime.Now.AddDays(-BookLoanTime / 2);
+            DateTime startTimeClosedLoans = DateTime.Now.AddDays(-BookLoanTime);
+
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Take(numberOfActiveLoans).ToList(), createActiveLoans: true, 
+                startTime: startTimeActiveLoans, endTime: startTimeActiveLoans.AddDays(BookLoanTime - 1));
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Take(numberOfExpiredLoans).ToList(), createActiveLoans: true, 
+                startTime: startTimeClosedLoans, endTime: startTimeClosedLoans.AddDays(BookLoanTime - 1));
 
             // Act
             await bookLoanRepository.CloseExpiredBookLoans();
@@ -160,40 +175,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
 
         #endregion
 
-        #region Methods
-
-        private async Task<BookLoan> CreateBookLoan(User user, bool createActiveLoans, DateTime? overrideStartTime = null)
-        {
-            return (await CreateBookLoans(user, 1, createActiveLoans, overrideStartTime: overrideStartTime)).First();
-        }
-
-        private async Task<List<BookLoan>> CreateBookLoans(User user, int numberOfLoans, bool createActiveLoans, DateTime? overrideStartTime = null)
-        {
-            // Arrange
-            DateTime startTime = overrideStartTime ?? DateTime.Now;
-            List<Book> books = await bookRepository.GetBooksAsync();
-            List<BookLoan> result = new();
-
-            // Act
-            for (int i = 0; i < numberOfLoans; i++)
-            {
-                int bookIndex = i < books.Count ? i : books.Count - 1;
-                DateTime? closedTime = createActiveLoans ? null : startTime;
-
-                BookLoan bookLoan = new BookLoan(startTime, startTime.AddDays(BookLoanTime - 1), user, books[bookIndex]) { ClosedTime = closedTime };
-                await bookLoanRepository.AddAsync(bookLoan);
-                result.Add(bookLoan);
-            }
-
-            return result;
-        }
-
-        private async Task<List<BookLoan>> GetBookLoans(User user)
-        {
-            IBookLoanRepository bookLoanRepository = new BookLoanRepository(_dbContext);
-            List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
-            return bookLoans;
-        }
+        #region Methods        
 
         public static IEnumerable<object[]> GetTestProlongActiveBookLoanInputData()
         {
