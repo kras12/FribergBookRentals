@@ -9,6 +9,8 @@ namespace FribergbookRentals.Data.Constants
 {
     public static class ApplicationUserClaims
     {
+        public const string UserId = ClaimTypes.NameIdentifier;
+
         public const string UserRole = ClaimTypes.Role;
     }
 }
