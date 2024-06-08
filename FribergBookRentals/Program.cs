@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace FribergBookRentals
 {
@@ -82,7 +83,28 @@ namespace FribergBookRentals
 				pattern: "{controller=Home}/{action=Index}/{id?}");
 			app.MapRazorPages();
 
-			app.Run();
+            // ==================================================================================================================
+            // Migration and seeding
+            // ==================================================================================================================
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                var context = services.GetRequiredService<ApplicationDbContext>();
+                context.Database.Migrate();
+
+#if DEBUG
+                if (!context.Books.Any())
+                {
+                    var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "BookList.txt"));
+                    var mockBooks = JsonSerializer.Deserialize<List<Book>>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+
+                    IBookRepository bookRepository = new BookRepository(context);
+                    bookRepository.AddBooksAsync(mockBooks!).Wait();
+                }
+#endif
+            }
+
+            app.Run();
 		}
 	}
 }

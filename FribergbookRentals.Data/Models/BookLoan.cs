@@ -6,39 +6,40 @@ using System.Threading.Tasks;
 
 namespace FribergbookRentals.Data.Models
 {
-	public class BookLoan
-	{
-		#region Properties
+    public class BookLoan
+    {
+        #region Constructors
 
-		public int Id { get; set; }
+        public BookLoan()
+        {
 
-		public DateTime StartTime { get; set; }
+        }
 
-		public DateTime EndTime { get; set; }
+        public BookLoan(DateTime startTime, DateTime endTime, User user, Book book)
+        {
+            StartTime = startTime;
+            EndTime = endTime;
+            User = user;
+            Book = book;
+        }
 
-		public DateTime? ClosedTime { get; set; }
+        #endregion
 
-		public User User { get; set; }
+        #region Properties
 
-		public Book Book { get; set; }
+        public int Id { get; set; }
 
-		#endregion
+        public DateTime StartTime { get; set; }
 
-		#region Constructors
+        public DateTime EndTime { get; set; }
 
-		public BookLoan()
-		{
+        public DateTime? ClosedTime { get; set; }
 
-		}
+        public User User { get; set; }
 
-		public BookLoan(DateTime startTime, DateTime endTime, User user, Book book)
-		{
-			StartTime = startTime;
-			EndTime = endTime;
-			User = user;
-			Book = book;
-		}
-	}
+        public Book Book { get; set; }
 
-	#endregion
+        #endregion
+
+    }
 }

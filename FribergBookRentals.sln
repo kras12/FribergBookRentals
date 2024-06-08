@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FribergBookRentals", "FribergBookRentals\FribergBookRentals.csproj", "{53A88D5B-3AB1-4A89-BDBB-927ADE33FC4B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FribergBookRentals", "FribergBookRentals\FribergBookRentals.csproj", "{53A88D5B-3AB1-4A89-BDBB-927ADE33FC4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FribergbookRentals.Data", "FribergbookRentals.Data\FribergbookRentals.Data.csproj", "{8D479266-4F99-46D5-9DED-7ACEBB3BC934}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FribergbookRentals.Data", "FribergbookRentals.Data\FribergbookRentals.Data.csproj", "{8D479266-4F99-46D5-9DED-7ACEBB3BC934}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FribergBookRentalsTest", "FribergBookRentalsTest\FribergBookRentalsTest.csproj", "{995A43CE-FE74-457E-91F7-ACF5DA09E925}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FribergBookRentalsTest", "FribergBookRentalsTest\FribergBookRentalsTest.csproj", "{995A43CE-FE74-457E-91F7-ACF5DA09E925}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

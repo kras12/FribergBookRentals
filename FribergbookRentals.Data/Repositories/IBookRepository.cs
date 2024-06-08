@@ -17,6 +17,8 @@ namespace FribergbookRentals.Data.Repositories
 
 		public Task<Book?> GetBookByIdAsync(int id);
 
-		public Task<List<Book>> SearchBooksAsync(BookSearchInputDto searchInput);
+		public Task<List<string>> GetBookLanguages();
+
+        public Task<List<Book>> SearchBooksAsync(BookSearchInputDto searchInput);
 	}
 }

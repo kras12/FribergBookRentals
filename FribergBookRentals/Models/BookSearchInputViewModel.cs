@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
@@ -9,25 +10,33 @@ namespace FribergbookRentals.Models
 {
 	public class BookSearchInputViewModel
 	{
-		#region Constructors
+        #region Constructors
 
-		public BookSearchInputViewModel(string? searchPhrase = null, string? language = null, int? year = null)
+        public BookSearchInputViewModel()
+        {
+            
+        }
+
+        public BookSearchInputViewModel(string? searchPhrase = null, string? language = null, int? year = null)
 		{
-			SearchPhrase = searchPhrase;
+            SearchPhrase = searchPhrase;
 			Language = language;
 			Year = year;
 		}
 
-		#endregion
+        #endregion
 
-		#region Properties
+        #region Properties		
 
-		public string? SearchPhrase { get; set; } = "";
+        [DisplayName("Sök")]
+        public string? SearchPhrase { get; set; } = null;
 
-		public string? Language { get; set; } = "";
+        [DisplayName("Språk")]
+        public string? Language { get; set; } = null;
 
-		public int? Year { get; set; }
+        [DisplayName("År")]
+        public int? Year { get; set; } = null;
 
-		#endregion
-	}
+        #endregion
+    }
 }

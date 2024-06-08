@@ -70,7 +70,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
             var httpContextMock = new HttpContextMoq.HttpContextMock();
             httpContextMock.User = claimsPrincipal;
 
-            var memberController = new MemberController(_bookLoanRepository, _autoMapper);
+            var memberController = new MemberController(_bookLoanRepository, _autoMapper, _bookRepository);
             memberController.ControllerContext.HttpContext = httpContextMock;
             memberController.TempData = new TempDataDictionary(httpContextMock, Mock.Of<ITempDataProvider>());
 

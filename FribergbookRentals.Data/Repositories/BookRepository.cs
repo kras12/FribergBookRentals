@@ -50,7 +50,18 @@ namespace FribergbookRentals.Data.Repositories
 
 		public Task<Book?> GetBookByIdAsync(int id)
 		{
-			return _applicationDbContext.Books.SingleOrDefaultAsync();
+			return _applicationDbContext.Books.SingleOrDefaultAsync(x => x.BookId == id);
+		}
+
+		public async Task<List<string>> GetBookLanguages()
+		{
+			return await _applicationDbContext.Books
+				.Select(x => x.Language)
+				.Distinct()
+				.OrderBy((x) => x == "Swedish" ? 0 : x == "English" ? 1 : 3)
+				.ThenBy(x => x)				
+				.ToListAsync();
+			
 		}
 
 		public Task<List<Book>> SearchBooksAsync(BookSearchInputDto searchInput)

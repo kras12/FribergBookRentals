@@ -1,0 +1,13 @@
+﻿@using FribergbookRentals.Models
+@model BookListViewModel
+
+<div class="d-flex flex-column gap-4 full-width">
+    @foreach (var book in Model.Books)
+    {
+        @await Component.InvokeAsync("BookListItem",
+                new
+                {
+                    Book = book
+                });
+    }
+</div>

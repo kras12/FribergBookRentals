@@ -2,11 +2,6 @@
 using FribergbookRentals.Data.Models;
 using FribergBookRentals.Data;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FribergbookRentals.Data.Repositories
 {
@@ -36,14 +31,52 @@ namespace FribergbookRentals.Data.Repositories
             return bookLoan;
         }
 
-		public async Task<BookLoan> CloseLoanAsync(BookLoan bookLoan)
+        public async Task<BookLoan> AddAsync(DateTime startTime, DateTime endTime, string userId, int bookId)
+		{
+			var user = _applicationDbContext.Users.Find(userId) ?? throw new Exception("User not found");
+			var book = _applicationDbContext.Books.Find(bookId) ?? throw new Exception("Book not found");
+
+			var newBookLoan = new BookLoan(startTime, endTime, user, book);
+			_applicationDbContext.BookLoans.Add(newBookLoan);
+			await _applicationDbContext.SaveChangesAsync();
+			return newBookLoan;
+        }
+
+        public async Task<BookLoan> CloseLoanAsync(BookLoan bookLoan)
 		{
 			bookLoan.ClosedTime = DateTime.Now;
 			await _applicationDbContext.SaveChangesAsync();
 			return bookLoan;
         }
 
-		public async Task<BookLoan?> GetBookLoanByUserIdAsync(string userId)
+        public async Task<bool> TryCloseLoanAsync(string userId, int loanId)
+        {
+			var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId).SingleOrDefaultAsync();
+
+			if (loan != null)
+			{
+				await CloseLoanAsync(loan);
+				return true;
+            }
+
+			return false;
+		}
+
+        public async Task<bool> TryProlongLoanAsync(string userId, int loanId, int days)
+        {
+            var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId).SingleOrDefaultAsync();
+
+            if (loan != null)
+            {
+				await ProlongBookLoanAsync(loan, DateTime.Now.AddDays(days));
+                return true;
+            }
+
+            return false;
+        }
+
+
+        public async Task<BookLoan?> GetBookLoanByUserIdAsync(string userId)
 		{
             return await _applicationDbContext.BookLoans.FirstOrDefaultAsync(b => b.User.Id == userId);
 			
@@ -93,6 +126,11 @@ namespace FribergbookRentals.Data.Repositories
 			return await _applicationDbContext.SaveChangesAsync();				
 		}
 
-		#endregion
-	}
+        public Task<bool> IsBookBorrowedAsync(string userId, int bookId)
+        {
+			return _applicationDbContext.BookLoans.AnyAsync(x => x.User.Id == userId && x.Book.BookId == bookId && x.ClosedTime == null);
+		}
+
+        #endregion
+    }
 }

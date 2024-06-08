@@ -1,0 +1,61 @@
+﻿@using FribergbookRentals.Models
+@model BookListItemViewModel
+
+<div class="card">
+    <div class="card-header housing-result-header d-flex flex-row justify-content-center">
+        <div>@Model.Book.Title</div>
+    </div>
+    <div class="card-header full-width">
+        <div class="card-title fs-1 text-center">@Model.Book.Title</div>
+        <div class="card-subtitle fs-2 text-center mb-2">@Model.Book.Author</div>
+        <div class="card-subtitle fs-3 text-center mb-2">@Model.Book.InformationUrl</div>
+        <div class="d-flex flex-row justify-content-center gap-4 flex-wrap full-width fs-5">
+            <span>År: @Model.Book.Year</span>
+            <span>Land: @Model.Book.Country</span>
+            <span>Språk: @Model.Book.Language</span>
+            <span>Antal sidor: @Model.Book.NumberOfPages</span>
+        </div>        
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            Beskrivning saknas
+        </p>
+    </div>
+    <div class="card-header full-width">
+        @if (Model.BookLoan != null)
+        {
+            <div class="d-flex flex-row justify-content-center gap-4 flex-wrap full-width fs-5">
+                <span>Startdatum: @Model.BookLoan.StartTime</span>
+                <span>Slutdatum: @Model.BookLoan.EndTime</span>
+                @if (Model.BookLoan.ClosedTime != null)
+                {
+                    <span>Avslutat: @Model.BookLoan.ClosedTime</span>
+                }
+            </div>
+        }
+    </div>
+    <div class="card-footer d-flex flex-row justify-content-center gap-3">
+        @if (Model.ListSettings.EnableBookBorrowing && 
+        (Model.Book.IsBorrowedByUser == null || Model.Book.IsBorrowedByUser == false))
+        {
+            <form asp-action="BorrowBook" method="post">
+                <input type="hidden" name="Id" asp-for="@Model.Book.BookId" />
+                <button type="submit" class="btn btn-primary">Låna</button>
+            </form>           
+        }
+        @if (Model.ListSettings.EnableCloseLoan && Model.BookLoan != null)
+        {
+            <form asp-action="CloseLoan" method="post">
+                <input type="hidden" name="bookLoanId" asp-for="@Model.BookLoan.Id" />
+                <button type="submit" class="btn btn-primary">Återlämna</button>
+            </form>
+        }
+        @if (Model.ListSettings.EnableProlongLoan && Model.BookLoan != null)
+        {
+            <form asp-action="ProlongLoan" method="post">
+                <input type="hidden" name="bookLoanId" asp-for="@Model.BookLoan.Id" />
+                <button type="submit" class="btn btn-primary">Förläng</button>
+            </form>
+        }
+    </div>
+</div>

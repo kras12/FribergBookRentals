@@ -195,7 +195,7 @@ namespace FribergbookRentals.Data.Migrations
                         new
                         {
                             Id = "7e648d4e-a530-4cd4-b8d7-8be891780f71",
-                            Name = "member",
+                            Name = "Member",
                             NormalizedName = "MEMBER"
                         });
                 });

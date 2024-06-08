@@ -1,47 +1,49 @@
-﻿@model IEnumerable<FribergbookRentals.Data.Models.BookLoan>
+﻿@model MemberBookLoansViewModel
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Lån";
 }
 
-<h1>Index</h1>
+<div class="d-flex flex-column gap-3">
+    <h1>Lån</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.StartTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EndTime)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ClosedTime)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.StartTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EndTime)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ClosedTime)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    @if (!string.IsNullOrEmpty(Model.FailureMessage))
+    {
+        <div class="font-size_x-large text-danger text-center">@Model.FailureMessage</div>
+    }
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="font-size_x-large text-success text-center">@Model.SuccessMessage</div>
+    }
+
+    <h2>Aktiva lån (@(Model.ActiveLoans.Count))</h2>
+    @if (Model.ActiveLoans.Count > 0)
+    {
+        @await Component.InvokeAsync("BookLoanList",
+            new
+            {
+                Books = Model.ActiveLoans,
+                EnableBookReturning = true,
+                EnableProlongLoan = true
+            });
+    }
+    else
+    {
+        <p class="text-center">Inga aktiva lån.</p>
+    }
+
+    <h2>Stängda lån (@(Model.ClosedLoans.Count))</h2>
+    @if (Model.ClosedLoans.Count > 0)
+    {
+        @await Component.InvokeAsync("BookLoanList",
+                new
+                {
+                    Books = Model.ClosedLoans,
+                    EnableBookReturning = false
+                });
+    }
+    else
+    {
+        <p class="text-center">Inga stängda lån.</p>
+    }
+</div>

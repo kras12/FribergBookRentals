@@ -27,15 +27,23 @@ namespace FribergBookRentals.Data
         {
             base.OnModelCreating(builder);
 
-			builder.Entity<IdentityRole>()
+			builder.Entity<BookLoan>()
+				.Navigation(x => x.Book)
+				.AutoInclude(true);
+
+            builder.Entity<BookLoan>()
+                .Navigation(x => x.User)
+                .AutoInclude(true);
+
+            builder.Entity<IdentityRole>()
 				.HasData(
 					new IdentityRole
 					{
-                        Id = "7e648d4e-a530-4cd4-b8d7-8be891780f71",
-                        Name = ApplicationUserRoles.Member,
-                        NormalizedName = ApplicationUserRoles.Member.ToUpper(),
-                    }				
-				);
+						Id = "7e648d4e-a530-4cd4-b8d7-8be891780f71",
+						Name = ApplicationUserRoles.Member,
+						NormalizedName = ApplicationUserRoles.Member.ToUpper(),
+					}
+                );
         }
 
         #endregion

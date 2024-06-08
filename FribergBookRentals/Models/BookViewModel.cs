@@ -27,6 +27,8 @@ namespace FribergbookRentals.Models
 
 		public int Year { get; set; }
 
+        public bool? IsBorrowedByUser { get; set; }
+
         #endregion
 	}
 }

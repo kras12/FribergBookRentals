@@ -1,8 +1,55 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model BookSearchViewModel
+@{
+    ViewData["Title"] = "Sök böcker";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="vertical-page-container mt-4">
+    <div class="d-flex flex-column align-items-center gap-3 col-md-12 col-xxl-10">
+        <div class="card vertical-page-section w-100">
+            <div class="card-header w-100">
+                <h1>Sök böcker</h1>
+            </div>
+            @if (!string.IsNullOrEmpty(Model.FailureMessage))
+            {
+                <div class="font-size_x-large text-danger text-center">@Model.FailureMessage</div>
+            }
+            @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+            {
+                <div class="font-size_x-large text-success text-center">@Model.SuccessMessage</div>
+            }
+            <form method="post">
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex flex-column">
+                        <label for="@Model.SearchInput.SearchPhrase">Sök på författare eller titel</label>
+                        <input asp-for="@Model.SearchInput.SearchPhrase" />
+                    </div>
+                    <div class="d-flex flex-column">
+                        <label for="@Model.SearchInput.Year">År</label>
+                        <input type="number" asp-for="@Model.SearchInput.Year" />
+                    </div>
+                    <div class="d-flex flex-column">
+                        <label for="@Model.SearchInput.Language">Språk</label>
+                        <select asp-for="@Model.SearchInput.Language" asp-items="@Model.Languages"></select>
+                    </div>                    
+                    <button class="btn btn-primary mt-2" type="submit">Sök</button>
+                </div>
+            </form>
+            <div class="card-footer w-100"></div>
+        </div>
+        @if (Model.Books != null && Model.Books.Count > 0)
+        {
+            <h2>Sökresultat: @(Model.Books.Count) st</h2>
+
+            @await Component.InvokeAsync("BookList",
+                new
+                {
+                    Books = Model.Books,
+                    EnableBookBorrowing = true
+                });
+        }
+        else if (Model.HaveSearchedBooks)
+        {
+            <p class="text-center">Inga böcker hittades.</p>
+        }
+    </div>
 </div>

@@ -13,6 +13,8 @@ using System.Web;
 using AutoMapper;
 using FribergBookRentals.Mapper;
 using FribergbookRentals.Models;
+using Microsoft.AspNetCore.Identity;
+using FribergbookRentals.Data.Models;
 
 
 namespace FribergBookRentalsTest.Tests.Controllers
@@ -23,6 +25,8 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         IBookRepository _bookRepository;
 
+        IBookLoanRepository _bookLoanRepository;
+
         IMapper _autoMapper;
 
         #endregion
@@ -32,6 +36,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
         public TestHomeController()
         {
             _bookRepository = new BookRepository(_dbContext);
+            _bookLoanRepository = new BookLoanRepository(_dbContext);
 
             MapperConfiguration config = new MapperConfiguration(config =>
             {
@@ -49,7 +54,8 @@ namespace FribergBookRentalsTest.Tests.Controllers
         [Fact]
         public async Task TestSearchBooks()
         {
-            var homeController = new HomeController(_bookRepository, _autoMapper);
+            var signingManagerMock = new Mock<SignInManager<User>>();
+            var homeController = new HomeController(_bookRepository, _autoMapper, signingManagerMock.Object, _bookLoanRepository);
 
             var userMock = new Mock<ClaimsPrincipal>();
             //userMock.Expect(p => p.IsInRole("admin")).Returns(true);
