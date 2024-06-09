@@ -5,8 +5,8 @@ using FribergbookRentals.Data.Repositories;
 using FribergbookRentals.Models;
 using FribergBookRentals.Constants;
 using FribergBookRentals.Data;
-using FribergBookRentals.Helpers;
 using FribergBookRentals.Models;
+using FribergBookRentals.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +15,7 @@ using static System.Reflection.Metadata.BlobBuilder;
 
 namespace FribergBookRentals.Controllers
 {
-	public class HomeController : Controller
+    public class HomeController : Controller
 	{
         #region Constants
 
@@ -29,24 +29,28 @@ namespace FribergBookRentals.Controllers
 
         #region Fields
 
-        IMapper _autoMapper;
+        private readonly IMapper _autoMapper;
 
-        IBookRepository _bookRepository;
+        private readonly IBookRepository _bookRepository;
 
-        IBookLoanRepository _bookLoanRepository;
+        private readonly IBookLoanRepository _bookLoanRepository;
 
         private readonly SignInManager<User> _signInManager;
+
+        private readonly ITempDataHelper _tempDataHelper;
 
         #endregion
 
         #region Constructors
 
-        public HomeController(IBookRepository bookRepository, IMapper autoMapper, SignInManager<User> signInManager, IBookLoanRepository bookLoanRepository)
+        public HomeController(IBookRepository bookRepository, IMapper autoMapper, SignInManager<User> signInManager, 
+            IBookLoanRepository bookLoanRepository, ITempDataHelper tempDataHelper)
         {
             _bookRepository = bookRepository;
             _autoMapper = autoMapper;
             _signInManager = signInManager;
             _bookLoanRepository = bookLoanRepository;
+            _tempDataHelper = tempDataHelper;
         }
 
         #endregion
@@ -61,7 +65,7 @@ namespace FribergBookRentals.Controllers
 
         public async Task<IActionResult> Index()
         {
-            if (TempDataHelper.TryGet(TempData, BorrowBookAfterLoginKey, out int bookId))
+            if (_tempDataHelper.TryGet(TempData, BorrowBookAfterLoginKey, out int bookId))
             {            
                 if (_signInManager.IsSignedIn(User) && User.IsInRole(ApplicationUserRoles.Member))
                 {
@@ -74,12 +78,12 @@ namespace FribergBookRentals.Controllers
             var viewModel = new BookSearchViewModel(languages);
             Book? borrowedBook;
 
-            if (TempDataHelper.TryGet(TempData, BookAlreadyBorrowedKey, out bookid))
+            if (_tempDataHelper.TryGet(TempData, BookAlreadyBorrowedKey, out bookid))
             {
                 borrowedBook = await _bookRepository.GetBookByIdAsync(bookid);
                 viewModel.FailureMessage = $"Du har redan ett lån på boken: {borrowedBook!.Title}";
             }
-            else if (TempDataHelper.TryGet(TempData, BookBorrowedSuccessfullyKey, out bookid))
+            else if (_tempDataHelper.TryGet(TempData, BookBorrowedSuccessfullyKey, out bookid))
             {
                 borrowedBook = await _bookRepository.GetBookByIdAsync(bookid);
                 viewModel.SuccessMessage = $"Du har nu lånat boken: {borrowedBook!.Title}";
@@ -124,9 +128,9 @@ namespace FribergBookRentals.Controllers
         [HttpPost]
         public async Task<IActionResult> BorrowBook([FromForm] int id)
         {
-            if (!User.Identity!.IsAuthenticated)
+            if (!_signInManager.IsSignedIn(User))
             {
-                TempDataHelper.Set(TempData, BorrowBookAfterLoginKey, id);
+                _tempDataHelper.Set(TempData, BorrowBookAfterLoginKey, id);
                 return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl = "/" });
             }
 
@@ -142,22 +146,25 @@ namespace FribergBookRentals.Controllers
         {
             if (await HaveBorrowedBook(id))
             {
-                TempDataHelper.Set(TempData, BookAlreadyBorrowedKey, id);
+                _tempDataHelper.Set(TempData, BookAlreadyBorrowedKey, id);
                 return false;
             }
             else
             {
                 await CreateBookLoan(id);
-                TempDataHelper.Set(TempData, BookBorrowedSuccessfullyKey, id);
+                _tempDataHelper.Set(TempData, BookBorrowedSuccessfullyKey, id);
                 return true;
             }
         }
 
+        public virtual string GetUserId()
+        {
+            return User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
+        }
+
         private async Task<bool> HaveBorrowedBook(int id)
         {
-            string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
-
-            if (await _bookLoanRepository.IsBookBorrowedAsync(userId, id))
+            if (await _bookLoanRepository.IsBookBorrowedAsync(GetUserId(), id))
             {
                 return true;
             }
@@ -167,8 +174,7 @@ namespace FribergBookRentals.Controllers
 
         private async Task CreateBookLoan(int id)
         {
-            string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
-            await _bookLoanRepository.AddAsync(DateTime.Now, DateTime.Now.AddDays(BookLoanData.BookLoanDurationInDays), userId, id);
+            await _bookLoanRepository.AddAsync(DateTime.Now, DateTime.Now.AddDays(BookLoanData.BookLoanDurationInDays), GetUserId(), id);
         }
 
         #endregion

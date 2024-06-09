@@ -3,8 +3,8 @@ using FribergbookRentals.Data.Constants;
 using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
 using FribergBookRentals.Constants;
-using FribergBookRentals.Helpers;
 using FribergBookRentals.Models;
+using FribergBookRentals.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,15 +30,18 @@ namespace FribergBookRentals.Controllers.Member
 
         IBookLoanRepository _bookLoanRepository;
 
+        private readonly ITempDataHelper _tempDataHelper;
+
         #endregion
 
         #region Constructors
 
-        public MemberController(IBookLoanRepository bookLoanRepository, IMapper autoMapper, IBookRepository bookRepository)
+        public MemberController(IBookLoanRepository bookLoanRepository, IMapper autoMapper, IBookRepository bookRepository, ITempDataHelper tempDataHelper)
         {
             _bookLoanRepository = bookLoanRepository;
             _autoMapper = autoMapper;
             _bookRepository = bookRepository;
+            _tempDataHelper = tempDataHelper;
         }
 
         #endregion
@@ -54,7 +57,7 @@ namespace FribergBookRentals.Controllers.Member
             //activeLoans = closedLoans;
             var viewModel = new MemberBookLoansViewModel(activeLoans, closedLoans);
 
-            if (TempDataHelper.TryGet(TempData, BookLoanClosedResultKey, out bool isLoanClosed))
+            if (_tempDataHelper.TryGet(TempData, BookLoanClosedResultKey, out bool isLoanClosed))
             {
                 if (isLoanClosed)
                 {
@@ -66,7 +69,7 @@ namespace FribergBookRentals.Controllers.Member
                 }
             }
 
-            if (TempDataHelper.TryGet(TempData, BookLoanProlongedResultKey, out bool isLoanProlonged))
+            if (_tempDataHelper.TryGet(TempData, BookLoanProlongedResultKey, out bool isLoanProlonged))
             {
                 if (isLoanProlonged)
                 {
@@ -87,11 +90,11 @@ namespace FribergBookRentals.Controllers.Member
         {
             if (await TryCloseBookLoan(bookLoanId))
             {
-                TempDataHelper.Set(TempData, BookLoanClosedResultKey, true);
+                _tempDataHelper.Set(TempData, BookLoanClosedResultKey, true);
             }
             else
             {
-                TempDataHelper.Set(TempData, BookLoanClosedResultKey, false);
+                _tempDataHelper.Set(TempData, BookLoanClosedResultKey, false);
             }
 
             return RedirectToAction(nameof(Index));
@@ -103,11 +106,11 @@ namespace FribergBookRentals.Controllers.Member
         {
             if (await TryProlongBookLoan(bookLoanId))
             {
-                TempDataHelper.Set(TempData, BookLoanProlongedResultKey, true);
+                _tempDataHelper.Set(TempData, BookLoanProlongedResultKey, true);
             }
             else
             {
-                TempDataHelper.Set(TempData, BookLoanProlongedResultKey, false);
+                _tempDataHelper.Set(TempData, BookLoanProlongedResultKey, false);
             }
 
             return RedirectToAction(nameof(Index));

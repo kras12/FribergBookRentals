@@ -6,6 +6,7 @@ using FribergBookRentals.Controllers;
 using FribergBookRentals.Controllers.Member;
 using FribergBookRentals.Mapper;
 using FribergBookRentals.Models;
+using FribergBookRentals.Services;
 using FribergBookRentalsTest.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
@@ -47,6 +48,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
         {
             // Arrange
             var user = await _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!);
+            var tempDataHelperMock = new Mock<ITempDataHelper>();
 
             var claimsPrincipal = new ClaimsPrincipal(new List<ClaimsIdentity>()
             {
@@ -60,7 +62,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
             var httpContextMock = new HttpContextMoq.HttpContextMock();
             httpContextMock.User = claimsPrincipal;
 
-            var memberController = new MemberController(_bookLoanRepository, _autoMapper, _bookRepository);
+            var memberController = new MemberController(_bookLoanRepository, _autoMapper, _bookRepository, tempDataHelperMock.Object);
             memberController.ControllerContext.HttpContext = httpContextMock;
             memberController.TempData = new TempDataDictionary(httpContextMock, Mock.Of<ITempDataProvider>());
 

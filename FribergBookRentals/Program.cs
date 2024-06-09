@@ -3,6 +3,7 @@ using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
 using FribergBookRentals.Data;
 using FribergBookRentals.Mapper;
+using FribergBookRentals.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,6 +29,9 @@ namespace FribergBookRentals
 			// Repositories
 			builder.Services.AddTransient<IBookLoanRepository, BookLoanRepository>();
             builder.Services.AddTransient<IBookRepository, BookRepository>();
+
+			// Services
+			builder.Services.AddScoped<ITempDataHelper, TempDataHelper>();
 
 			// Identity
 			builder.Services.AddDefaultIdentity<User>(options =>

@@ -2,12 +2,12 @@
 using Newtonsoft.Json;
 using System.Diagnostics.CodeAnalysis;
 
-namespace FribergBookRentals.Helpers
+namespace FribergBookRentals.Services
 {
     /// <summary>
-    /// A helper class for storing and retrieving temp data between requests. 
+    /// A service class for storing and retrieving temp data between requests. 
     /// </summary>
-    public static class TempDataHelper
+    public class TempDataHelper : ITempDataHelper
     {
         #region Methods
 
@@ -19,7 +19,7 @@ namespace FribergBookRentals.Helpers
         /// <param name="key">The key for the data.</param>
         /// <param name="value">The data to store.</param> 
         /// <exception cref="ArgumentException"></exception>
-        public static void Set<T>(ITempDataDictionary tempData, string key, T value)
+        public void Set<T>(ITempDataDictionary tempData, string key, T value)
         {
             #region Checks
 
@@ -41,7 +41,7 @@ namespace FribergBookRentals.Helpers
         /// <param name="data">The retrieved data if the operation was successful. Null if the operation failed.</param>
         /// <returns>True if the operation was successful. False if the operation failed.</returns>
         /// <exception cref="ArgumentException"></exception>
-        public static bool TryGet<T>(ITempDataDictionary tempData, string key, [NotNullWhen(returnValue: true)] out T? data)
+        public bool TryGet<T>(ITempDataDictionary tempData, string key, [NotNullWhen(returnValue: true)] out T? data)
         {
             #region Checks
 
@@ -70,7 +70,7 @@ namespace FribergBookRentals.Helpers
         /// <param name="tempData">The temp data dictionary to remove the data from.</param>
         /// <param name="key">The key for the data to remove.</param>
         /// <exception cref="ArgumentException"></exception>
-        public static void Remove(ITempDataDictionary tempData, string key)
+        public void Remove(ITempDataDictionary tempData, string key)
         {
             #region Checks
 

@@ -4,21 +4,15 @@ using FribergBookRentals.Controllers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Security.Principal;
-using System.Web;
-using AutoMapper;
 using FribergBookRentals.Mapper;
 using FribergbookRentals.Models;
 using Microsoft.AspNetCore.Identity;
 using FribergbookRentals.Data.Models;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using FribergBookRentals.Models;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using FribergBookRentals.Services;
 
 
 namespace FribergBookRentalsTest.Tests.Controllers
@@ -30,8 +24,6 @@ namespace FribergBookRentalsTest.Tests.Controllers
         IBookRepository _bookRepository;
 
         IBookLoanRepository _bookLoanRepository;
-
-        IMapper _autoMapper;
 
         #endregion
 
@@ -55,39 +47,86 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         #region Methods
 
-        [Fact]
-        public async Task TestSearchBooks()
+        private async Task<HomeController> CreateHomeController(bool isUserAuthenticated)
         {
-            //      SignInManager(UserManager<TUser> userManager,
-            //IHttpContextAccessor contextAccessor,
-            //IUserClaimsPrincipalFactory<TUser> claimsFactory,
-            //IOptions<IdentityOptions> optionsAccessor,
-            //ILogger<SignInManager<TUser>> logger,
-            //IAuthenticationSchemeProvider schemes,
-            //IUserConfirmation<TUser> confirmation)
-
-            // Arrange
             var contextAccessorMock = new Mock<IHttpContextAccessor>();
             var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
             var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
             var userMock = new Mock<ClaimsPrincipal>();
             var claimsPrincipalMock = new Mock<UserClaimsPrincipalFactory<User>>();
+            var tempDataHelperMock = new Mock<ITempDataHelper>();
 
             //userMock.Expect(p => p.IsInRole("admin")).Returns(true);            
-            contextAccessorMock.SetupGet(ctx => ctx.HttpContext!.User)
+            contextAccessorMock.SetupGet(x => x.HttpContext!.User)
                        .Returns(userMock.Object);
+            //contextAccessorMock.SetupGet(x => x.HttpContext!.User.Identity!.IsAuthenticated)
+            //                     .Returns(isUserAuthenticated);
 
-            var controllerContextMock = new Mock<ControllerContext>();
+            signingManagerMock.Setup(x => x.IsSignedIn(It.IsAny<ClaimsPrincipal>())).Returns(isUserAuthenticated);
+
+
+            // public ActionContext(
+            //        HttpContext httpContext,
+            //        RouteData routeData,
+            //    ActionDescriptor actionDescriptor)
+            //    : this(httpContext, routeData, actionDescriptor, new ModelStateDictionary())
+
+            var httpContext = new DefaultHttpContext();
+            httpContext.User = userMock.Object;
+            var actionContext = new ActionContext(httpContext, new Microsoft.AspNetCore.Routing.RouteData(), 
+                new ControllerActionDescriptor(), new ModelStateDictionary());
+            var controllerContextMock = new Mock<ControllerContext>(actionContext);
+            //controllerContextMock.SetupGet(x => x.HttpContext.User.Identity!.IsAuthenticated)
+            //                     .Returns(isUserAuthenticated);
             //controllerContextMock.SetupGet(x => x.HttpContext)
-            //                     .Returns(contextMock.Object.HttpContext!);
+            //                     .Returns(new DefaultHttpContext());
 
-            
+            var user = await GetDefaultUser();
 
-            BookSearchInputViewModel searchInput = new BookSearchInputViewModel();
+            var homeControllerMock = new Mock<HomeController>(_bookRepository, _autoMapper, signingManagerMock.Object, _bookLoanRepository, tempDataHelperMock.Object);
+            //homeControllerMock.SetupGet(x => x.ControllerContext).Returns(controllerContextMock.Object);
+            homeControllerMock.Setup(x => x.GetUserId()).Returns(user.Id);
 
+            //homeController.ControllerContext = controllerContextMock.Object;
 
-            var homeController = new HomeController(_bookRepository, _autoMapper, signingManagerMock.Object, _bookLoanRepository);
+            var homeController = homeControllerMock.Object;
             homeController.ControllerContext = controllerContextMock.Object;
+            
+            return homeController;
+        }
+
+        [InlineData(true)]
+        [InlineData(false)]
+        [Theory]
+        public async Task TestBorrowBook(bool isUserLoggedIn)
+        {
+            // Arrange
+            var book = _bookRepository.GetBookByIdAsync(1);
+            var homeController = await CreateHomeController(isUserLoggedIn);
+            var user = await GetDefaultUser();
+
+            // Act
+            var result = await homeController.BorrowBook(book.Id);
+            var bookLoans = await _bookLoanRepository.GetActiveBookLoansAsync(user.Id);
+
+            // Assert
+            if (isUserLoggedIn)
+            {
+                Assert.Contains(bookLoans, x => x.Book.BookId == book.Id && x.User.Id == user.Id);
+            }
+            else
+            {
+                Assert.DoesNotContain(bookLoans, x => x.Book.BookId == book.Id && x.User.Id == user.Id);
+            }
+            
+        }
+
+        [Fact]
+        public async Task TestSearchBooks()
+        {
+            // Arrange
+            var homeController = await CreateHomeController(false);
+            BookSearchInputViewModel searchInput = new BookSearchInputViewModel();
 
             // Act
             var result = await homeController.Index(searchInput);
@@ -96,7 +135,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
             // Assert
 
-            Assert.True(controllerContextMock.Object.ModelState.IsValid);
+            Assert.True(homeController.ModelState.IsValid);
             Assert.True(searchResult.HaveSearchedBooks);
             Assert.True(searchResult.Books!.Count > 0);
 
