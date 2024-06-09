@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace FribergbookRentals.Data.Exceptions
 {
-	public class BookLoanExpiredException : Exception
+	public class BookLoanClosedException : Exception
 	{
 		#region Constructors
 
-		public BookLoanExpiredException(string? message = null) : base(message)
+		public BookLoanClosedException(string? message = null) : base(message)
 		{
 
 		}

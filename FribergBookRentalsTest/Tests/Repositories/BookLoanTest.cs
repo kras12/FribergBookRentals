@@ -144,7 +144,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
 
             // Act
             // Assert
-            await Assert.ThrowsAsync<BookLoanExpiredException>(async () => await bookLoanRepository.ProlongBookLoanAsync(bookLoan, DateTime.Now.AddDays(BookLoanTime - 1)));
+            await Assert.ThrowsAsync<BookLoanClosedException>(async () => await bookLoanRepository.ProlongBookLoanAsync(bookLoan, TimeSpan.FromDays(BookLoanTime - 1)));
         }
 
         [Fact]

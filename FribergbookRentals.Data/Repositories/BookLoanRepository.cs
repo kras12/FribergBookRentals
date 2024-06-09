@@ -106,7 +106,7 @@ namespace FribergbookRentals.Data.Repositories
 		{
 			if (bookLoan.ClosedTime.HasValue)
 			{
-				throw new BookLoanExpiredException("Can't prolong a book loan that has been closed.");
+				throw new BookLoanClosedException("Can't prolong a book loan that has been closed.");
 			}
 
 			_applicationDbContext.Attach(bookLoan);
