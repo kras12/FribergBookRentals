@@ -93,13 +93,19 @@ namespace FribergBookRentals.Controllers.Member
         [Authorize(Roles = ApplicationUserRoles.Member)]
         public async Task<IActionResult> CloseLoan(int bookLoanId)
         {
+            if (!User.Identity!.IsAuthenticated || !User.IsInRole(ApplicationUserRoles.Member))
+            {
+                return Unauthorized();
+
+            }
+
             if (await TryCloseBookLoan(bookLoanId))
             {
                 _tempDataHelper.Set(TempData, BookLoanClosedResultKey, true);
             }
             else
             {
-                _tempDataHelper.Set(TempData, BookLoanClosedResultKey, false);
+                return NotFound();
             }
 
             return RedirectToAction(nameof(Index));
