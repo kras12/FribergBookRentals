@@ -61,7 +61,7 @@ namespace FribergBookRentalsTest
             _autoMapper = new Mapper(config);
 
             SeedBooks();
-            SeedDefaultUser();
+            SeedDefaultUser().Wait();
         }
 
         #endregion
@@ -88,6 +88,7 @@ namespace FribergBookRentalsTest
 			userManager.Setup(x => x.GetRolesAsync(It.IsAny<User>())).CallBase();
             userManager.Setup(x => x.AddToRoleAsync(It.IsAny<User>(), It.IsAny<string>())).CallBase();
             userManager.Setup(x => x.FindByEmailAsync(It.IsAny<string>())).CallBase();
+            userManager.Setup(x => x.GetClaimsAsync(It.IsAny<User>())).CallBase();
             userManager.CallBase = true;
 
             return userManager;
@@ -117,11 +118,11 @@ namespace FribergBookRentalsTest
 			bookRepository.AddBooksAsync(mockBooks!).Wait();
 		}
 
-		private void SeedDefaultUser()
+		private async Task SeedDefaultUser()
 		{
             _userManager.Object.CreateAsync(_defaultSeedUserData, DefaultUserPassword).Wait();
-			var user = _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!).Result;
-			_userManager.Object.AddToRoleAsync(user!, ApplicationUserRoles.Member);
+			var user = await GetDefaultUser();
+			await _userManager.Object.AddToRoleAsync(user, ApplicationUserRoles.Member);
         }
 
 		#endregion

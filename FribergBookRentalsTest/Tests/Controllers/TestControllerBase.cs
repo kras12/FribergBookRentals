@@ -11,6 +11,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using FribergbookRentals.Data.Constants;
 
 namespace FribergBookRentalsTest.Tests.Controllers
 {
@@ -18,17 +19,17 @@ namespace FribergBookRentalsTest.Tests.Controllers
     {
         #region Methods
 
-        protected Mock<ControllerContext> CreateControllerContextMock(Mock<ClaimsPrincipal> userMock)
+        protected Mock<ControllerContext> CreateControllerContextMock(ClaimsPrincipal user)
         {
             var httpContext = new DefaultHttpContext();
-            httpContext.User = userMock.Object;
+            httpContext.User = user;
             var actionContext = new ActionContext(httpContext, new Microsoft.AspNetCore.Routing.RouteData(),
                 new ControllerActionDescriptor(), new ModelStateDictionary());
 
             return new Mock<ControllerContext>(actionContext);
         }
 
-        protected Mock<SignInManager<User>> CreateSigningManagerMock(Mock<ClaimsPrincipal> userMock, bool isUserAuthenticated)
+        protected Mock<SignInManager<User>> CreateSigningManagerMock(ClaimsPrincipal user, bool isUserAuthenticated)
         {
             var contextAccessorMock = new Mock<IHttpContextAccessor>();
             var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
@@ -36,16 +37,22 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
             signingManagerMock.Setup(x => x.IsSignedIn(It.IsAny<ClaimsPrincipal>())).Returns(isUserAuthenticated);
             contextAccessorMock.SetupGet(x => x.HttpContext!.User)
-                       .Returns(userMock.Object);
+                       .Returns(user);
 
             return signingManagerMock;
         }
 
-        protected Mock<ClaimsPrincipal> CreateUserMock(bool isUserAuthenticated, string role)
+        protected ClaimsPrincipal CreateUserClaims(User user)
         {
-            var userMock = new Mock<ClaimsPrincipal>();
-            userMock.Setup(x => x.IsInRole(role)).Returns(isUserAuthenticated);
-            return userMock;
+            var result = new ClaimsPrincipal();
+
+            result.AddIdentity(new ClaimsIdentity(new List<Claim>()
+            {
+                new Claim(ApplicationUserClaims.UserId, user.Id),
+                new Claim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member),
+            }));
+
+            return result;
         }
 
         #endregion

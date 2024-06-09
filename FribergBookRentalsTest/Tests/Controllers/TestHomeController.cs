@@ -26,6 +26,33 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         IBookLoanRepository _bookLoanRepository;
 
+        public static IEnumerable<object[]> _bookSearchInputData =>
+        new List<object[]>
+        {
+            new object[] { new BookSearchInputViewModel() },
+
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart") },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Chinua Achebe") },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart Chinua Achebe") },
+
+
+            new object[] { new BookSearchInputViewModel(language: "English") },
+            new object[] { new BookSearchInputViewModel(year: 1958) },
+            new object[] { new BookSearchInputViewModel(language: "English", year: 1958) },
+
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart", language: "English") },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart", year: 1958) },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart", language: "English", year: 1958) },
+
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Chinua Achebe", language: "English") },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Chinua Achebe", year: 1958) },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Chinua Achebe", language: "English", year: 1958) },
+
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart Chinua Achebe", language: "English") },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart Chinua Achebe", year: 1958) },
+            new object[] { new BookSearchInputViewModel(searchPhrase: "Things Fall Apart Chinua Achebe", language: "English", year: 1958) },
+        };
+
         #endregion
 
         #region Constructors
@@ -51,22 +78,18 @@ namespace FribergBookRentalsTest.Tests.Controllers
         private async Task<HomeController> CreateHomeController(bool isUserAuthenticated)
         {
             // User
-            var userMock = CreateUserMock(isUserAuthenticated, ApplicationUserRoles.Member);
+            var user = await GetDefaultUser();
+            var userClaims = CreateUserClaims(user);
 
             // Signing manager
-            var signinManagerMock = CreateSigningManagerMock(userMock, isUserAuthenticated);
+            var signinManagerMock = CreateSigningManagerMock(userClaims, isUserAuthenticated);
             
             // Controller context
-            var controllerContextMock = CreateControllerContextMock(userMock);
-
-            // Home controller mock
-            var user = await GetDefaultUser();
-            var tempDataHelperMock = new Mock<ITempDataHelper>();
-            var homeControllerMock = new Mock<HomeController>(_bookRepository, _autoMapper, signinManagerMock.Object, _bookLoanRepository, tempDataHelperMock.Object);
-            homeControllerMock.Setup(x => x.GetUserId()).Returns(user.Id);
+            var controllerContextMock = CreateControllerContextMock(userClaims);
 
             // Home controller
-            var homeController = homeControllerMock.Object;
+            var tempDataHelperMock = new Mock<ITempDataHelper>();
+            var homeController = new HomeController(_bookRepository, _autoMapper, signinManagerMock.Object, _bookLoanRepository, tempDataHelperMock.Object);
             homeController.ControllerContext = controllerContextMock.Object;
             
             return homeController;
@@ -101,12 +124,12 @@ namespace FribergBookRentalsTest.Tests.Controllers
             }            
         }
 
-        [Fact]
-        public async Task TestSearchBooks()
+        [Theory]
+        [MemberData(nameof(_bookSearchInputData))]
+        public async Task TestSearchBooks(BookSearchInputViewModel searchInput)
         {
             // Arrange
             var homeController = await CreateHomeController(false);
-            BookSearchInputViewModel searchInput = new BookSearchInputViewModel();
 
             // Act
             var result = await homeController.Index(searchInput);
