@@ -8,6 +8,8 @@ namespace FribergbookRentals.Data.Repositories
 
         public Task<BookLoan> AddAsync(DateTime startTime, TimeSpan newEndTimeOffset, string userId, int bookId);
 
+        public Task<BookLoan?> GetBookLoanByIdAsync(int id);
+
         public Task<BookLoan?> GetBookLoanByUserIdAsync(string userId);
 
 		public Task<List<BookLoan>> GetAllBookLoansAsync();
@@ -26,7 +28,7 @@ namespace FribergbookRentals.Data.Repositories
 
         public Task<BookLoan> ProlongBookLoanAsync(BookLoan bookLoan, TimeSpan newEndTimeOffset);
 
-		public Task<int> CloseExpiredBookLoans();
+        public Task<int> CloseExpiredBookLoans();
 
 		public Task<bool> IsBookBorrowedAsync(string userId, int bookId);
 	}
