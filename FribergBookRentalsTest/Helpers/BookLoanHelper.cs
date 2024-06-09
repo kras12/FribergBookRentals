@@ -35,6 +35,16 @@ namespace FribergBookRentalsTest.Helpers
             return result;
         }
 
+        public static async Task<BookLoan> CreateBookLoan(IBookLoanRepository bookLoanRepository, User user, Book book, bool createActiveLoans, DateTime startTime, TimeSpan endTimeOffset)
+        {
+            return (await CreateBookLoans(bookLoanRepository, user, new List<Book>() { book }, createActiveLoans, startTime, endTimeOffset)).First();
+        }
+
+        public static Task<List<BookLoan>> CreateBookLoans(IBookLoanRepository bookLoanRepository, User user, List<Book> books, bool createActiveLoans, DateTime startTime, TimeSpan endTimeOffset)
+        {
+            return CreateBookLoans(bookLoanRepository, user, books, createActiveLoans, startTime, endTimeOffset);
+        }
+
         #endregion
     }
 }
