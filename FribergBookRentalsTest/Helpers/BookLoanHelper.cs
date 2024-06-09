@@ -42,7 +42,7 @@ namespace FribergBookRentalsTest.Helpers
 
         public static Task<List<BookLoan>> CreateBookLoans(IBookLoanRepository bookLoanRepository, User user, List<Book> books, bool createActiveLoans, DateTime startTime, TimeSpan endTimeOffset)
         {
-            return CreateBookLoans(bookLoanRepository, user, books, createActiveLoans, startTime, endTimeOffset);
+            return CreateBookLoans(bookLoanRepository, user, books, createActiveLoans, startTime, startTime.Add(endTimeOffset));
         }
 
         #endregion
