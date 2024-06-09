@@ -1,4 +1,6 @@
+using AutoMapper;
 using FribergbookRentals.Data.Constants;
+using FribergbookRentals.Data.Dto;
 using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
 using FribergBookRentals.Data;
@@ -12,7 +14,7 @@ using System.Text.Json;
 
 namespace FribergBookRentals
 {
-	public class Program
+    public class Program
 	{
 		public static void Main(string[] args)
 		{
@@ -100,10 +102,12 @@ namespace FribergBookRentals
                 if (!context.Books.Any())
                 {
                     var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "BookList.txt"));
-                    var mockBooks = JsonSerializer.Deserialize<List<Book>>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+                    var seedbooks = JsonSerializer.Deserialize<List<SeedBookDto>>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
+					var mapper = services.GetRequiredService<IMapper>();
+					var books = mapper.Map<List<Book>>(seedbooks);
 
                     IBookRepository bookRepository = new BookRepository(context);
-                    bookRepository.AddBooksAsync(mockBooks!).Wait();
+                    bookRepository.AddBooksAsync(books!).Wait();
                 }
 #endif
             }
