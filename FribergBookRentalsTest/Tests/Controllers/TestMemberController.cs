@@ -26,9 +26,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         IBookRepository _bookRepository;
 
-        IBookLoanRepository _bookLoanRepository;
-
-        IMapper _autoMapper;
+        IBookLoanRepository _bookLoanRepository;        
 
         #endregion
 
@@ -38,14 +36,6 @@ namespace FribergBookRentalsTest.Tests.Controllers
         {
             _bookRepository = new BookRepository(_dbContext);
             _bookLoanRepository = new BookLoanRepository(_dbContext);
-
-            MapperConfiguration config = new MapperConfiguration(config =>
-            {
-                config.AddProfile(new EntityToViewModelAutoMapperProfile());
-                config.AddProfile(new ViewModelToEntityMapperProfile());
-            });
-
-            _autoMapper = new Mapper(config);
         }
 
         #endregion

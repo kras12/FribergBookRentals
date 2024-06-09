@@ -15,6 +15,8 @@ using Moq;
 using FribergbookRentals.Data.Migrations;
 using Microsoft.Extensions.Logging;
 using FribergbookRentals.Data.Constants;
+using AutoMapper;
+using FribergBookRentals.Mapper;
 
 namespace FribergBookRentalsTest
 {
@@ -24,7 +26,7 @@ namespace FribergBookRentalsTest
 
         protected ApplicationDbContext _dbContext;
 
-		protected User _defaultSeedUserData = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
+		protected User _defaultSeedUserData = new User("Kalle", "Anka", "kalle@ankeborg.com");
 
 		protected const string DefaultUserPassword = "Aa!12345678";
 
@@ -35,6 +37,8 @@ namespace FribergBookRentalsTest
 		protected readonly Mock<UserManager<User>> _userManager;
 
 		protected readonly UserStore<User> _userStore;
+
+        protected IMapper _autoMapper;
 
         #endregion
 
@@ -47,6 +51,14 @@ namespace FribergBookRentalsTest
 			
 			_userStore = CreateUserStore();
 			_userManager = CreateUserManager();
+
+            MapperConfiguration config = new MapperConfiguration(config =>
+            {
+                config.AddProfile(new EntityToViewModelAutoMapperProfile());
+                config.AddProfile(new ViewModelToEntityMapperProfile());
+            });
+
+            _autoMapper = new Mapper(config);
 
             SeedBooks();
             SeedDefaultUser();
@@ -92,8 +104,7 @@ namespace FribergBookRentalsTest
 		}
 
 		protected async Task<User> GetDefaultUser()
-		{
-			
+		{			
 			return await _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!) ?? throw new Exception("Default user not found");
 		}
 

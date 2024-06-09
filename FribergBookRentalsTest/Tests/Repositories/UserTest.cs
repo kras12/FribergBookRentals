@@ -15,21 +15,21 @@ namespace FribergBookRentalsTest.Tests.Repositories
         {
             //Arrange
 
-            User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
+            User newUser = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
 
             //Act
 
-            var createResult = await _userManager.Object.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
-            var fetchedUser = await _userManager.Object.FindByEmailAsync("kalle@ankeborg.com");
-            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, "Ab1slkdjflksdfjlksd");
+            var createResult = await _userManager.Object.CreateAsync(newUser, DefaultUserPassword);
+            var fetchedUser = await _userManager.Object.FindByEmailAsync(newUser.Email!);
+            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, DefaultUserPassword);
 
             //Assert
 
             Assert.True(createResult.Succeeded);
             Assert.True(fetchedUser != null);
-            Assert.True(fetchedUser.FirstName == "Kalle");
-            Assert.True(fetchedUser.LastName == "Anka");
-            Assert.True(fetchedUser.Email == "kalle@ankeborg.com");
+            Assert.True(fetchedUser.FirstName == newUser.FirstName);
+            Assert.True(fetchedUser.LastName == newUser.LastName);
+            Assert.True(fetchedUser.Email == newUser.Email);
             Assert.True(passwordTest);
         }
 
@@ -38,36 +38,15 @@ namespace FribergBookRentalsTest.Tests.Repositories
         {
             //Arrange
 
-            User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
-
             //Act
-            var createResult = await _userManager.Object.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
-            var fetchedUser = await _userManager.Object.FindByEmailAsync("kalle@ankeborg.com");
-            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, "Ab1slkdjflksdfjlksd");
+            var fetchedUser = await _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!);
+            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, DefaultUserPassword);
 
             //Assert
 
-            Assert.True(createResult.Succeeded);
-            Assert.True(fetchedUser != null);
-            Assert.True(fetchedUser.Email == "kalle@ankeborg.com");
-            Assert.True(passwordTest);
+            Assert.True(fetchedUser != null, "User not found in database.");
+            Assert.True(passwordTest, "Password check failed.");
         }
-
-
-        // TODO - Remove
-        //[Fact]
-        //public async Task TestUserLogout()
-        //{
-        //    User newUser = new User("Kalle", "Anka", "kalle@ankeborg.com");
-        //    UserManager<User> userManager = CreateUserManagager();
-
-        //    var createResult = await userManager.CreateAsync(newUser, "Ab1slkdjflksdfjlksd");
-        //    var fetchedUser = await userManager.FindByEmailAsync("kalle@ankeborg.com");
-
-        //    // Inne i en controller:
-        //    // User.Identity.IsAuthenticated
-        //}
-
 
         #endregion
     }
