@@ -15,6 +15,10 @@ using FribergBookRentals.Mapper;
 using FribergbookRentals.Models;
 using Microsoft.AspNetCore.Identity;
 using FribergbookRentals.Data.Models;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using FribergBookRentals.Models;
 
 
 namespace FribergBookRentalsTest.Tests.Controllers
@@ -54,31 +58,47 @@ namespace FribergBookRentalsTest.Tests.Controllers
         [Fact]
         public async Task TestSearchBooks()
         {
-            var signingManagerMock = new Mock<SignInManager<User>>();
-            var homeController = new HomeController(_bookRepository, _autoMapper, signingManagerMock.Object, _bookLoanRepository);
+            //      SignInManager(UserManager<TUser> userManager,
+            //IHttpContextAccessor contextAccessor,
+            //IUserClaimsPrincipalFactory<TUser> claimsFactory,
+            //IOptions<IdentityOptions> optionsAccessor,
+            //ILogger<SignInManager<TUser>> logger,
+            //IAuthenticationSchemeProvider schemes,
+            //IUserConfirmation<TUser> confirmation)
 
+            // Arrange
+            var contextAccessorMock = new Mock<IHttpContextAccessor>();
+            var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
+            var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
             var userMock = new Mock<ClaimsPrincipal>();
-            //userMock.Expect(p => p.IsInRole("admin")).Returns(true);
+            var claimsPrincipalMock = new Mock<UserClaimsPrincipalFactory<User>>();
 
-            var contextMock = new Mock<IHttpContextAccessor>();
-            contextMock.SetupGet(ctx => ctx.HttpContext!.User)
+            //userMock.Expect(p => p.IsInRole("admin")).Returns(true);            
+            contextAccessorMock.SetupGet(ctx => ctx.HttpContext!.User)
                        .Returns(userMock.Object);
 
             var controllerContextMock = new Mock<ControllerContext>();
             //controllerContextMock.SetupGet(x => x.HttpContext)
             //                     .Returns(contextMock.Object.HttpContext!);
 
-            homeController.ControllerContext = controllerContextMock.Object;
-
+            
 
             BookSearchInputViewModel searchInput = new BookSearchInputViewModel();
 
+
+            var homeController = new HomeController(_bookRepository, _autoMapper, signingManagerMock.Object, _bookLoanRepository);
+            homeController.ControllerContext = controllerContextMock.Object;
+
+            // Act
             var result = await homeController.Index(searchInput);
             var viewResult = (ViewResult)result;
-            var foundBooks = (List<BookViewModel>)viewResult.Model!;
+            var searchResult = (BookSearchViewModel)viewResult.Model!;
+
+            // Assert
 
             Assert.True(controllerContextMock.Object.ModelState.IsValid);
-            Assert.True(foundBooks.Count > 0);
+            Assert.True(searchResult.HaveSearchedBooks);
+            Assert.True(searchResult.Books!.Count > 0);
 
             //userMock.Verify(p => p.IsInRole("admin"));
             //Assert.Equal("Index", ((ViewResult)result).ViewName);
