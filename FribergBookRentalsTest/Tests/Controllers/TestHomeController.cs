@@ -13,6 +13,7 @@ using FribergBookRentals.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using FribergBookRentals.Services;
+using FribergbookRentals.Data.Constants;
 
 
 namespace FribergBookRentalsTest.Tests.Controllers
@@ -62,6 +63,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
             //contextAccessorMock.SetupGet(x => x.HttpContext!.User.Identity!.IsAuthenticated)
             //                     .Returns(isUserAuthenticated);
 
+            userMock.Setup(x => x.IsInRole(ApplicationUserRoles.Member)).Returns(isUserAuthenticated);
             signingManagerMock.Setup(x => x.IsSignedIn(It.IsAny<ClaimsPrincipal>())).Returns(isUserAuthenticated);
 
 

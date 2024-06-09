@@ -134,6 +134,11 @@ namespace FribergBookRentals.Controllers
                 return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl = "/" });
             }
 
+            if (!User.IsInRole(ApplicationUserRoles.Member))
+            {
+                return Unauthorized();
+            }
+
             await TryBorrowBook(id);
             return RedirectToAction(nameof(Index));
         }
