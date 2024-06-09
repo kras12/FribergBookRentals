@@ -96,7 +96,6 @@ namespace FribergBookRentals.Controllers.Member
             if (!User.Identity!.IsAuthenticated || !User.IsInRole(ApplicationUserRoles.Member))
             {
                 return Unauthorized();
-
             }
 
             if (await TryCloseBookLoan(bookLoanId))
@@ -115,13 +114,18 @@ namespace FribergBookRentals.Controllers.Member
         [Authorize(Roles = ApplicationUserRoles.Member)]
         public async Task<IActionResult> ProlongLoan(int bookLoanId)
         {
+            if (!User.Identity!.IsAuthenticated || !User.IsInRole(ApplicationUserRoles.Member))
+            {
+                return Unauthorized();
+            }
+
             if (await TryProlongBookLoan(bookLoanId))
             {
                 _tempDataHelper.Set(TempData, BookLoanProlongedResultKey, true);
             }
             else
             {
-                _tempDataHelper.Set(TempData, BookLoanProlongedResultKey, false);
+                return NotFound();
             }
 
             return RedirectToAction(nameof(Index));
