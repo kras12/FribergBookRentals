@@ -101,13 +101,31 @@ namespace FribergBookRentals
 #if DEBUG
                 if (!context.Books.Any())
                 {
-                    var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Resources", "BookList.txt"));
+                    var json = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "MockData", "BookList.txt"));
                     var seedbooks = JsonSerializer.Deserialize<List<SeedBookDto>>(json, new JsonSerializerOptions() { PropertyNameCaseInsensitive = true });
 					var mapper = services.GetRequiredService<IMapper>();
 					var books = mapper.Map<List<Book>>(seedbooks);
 
                     IBookRepository bookRepository = new BookRepository(context);
                     bookRepository.AddBooksAsync(books!).Wait();
+
+                    string resourceImageFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "MockData", "Images");
+                    string uploadsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Uploads");
+
+					if (!Directory.Exists(uploadsFolder))
+					{
+						Directory.CreateDirectory(uploadsFolder);
+					}
+
+					if (!Directory.EnumerateFiles(uploadsFolder).Any())
+					{
+                        foreach (var book in books)
+                        {
+                            string sourceFile = Path.Combine(resourceImageFolder, book.ImageName!);
+                            string destinationFile = Path.Combine(uploadsFolder, book.ImageName!);
+                            File.Copy(sourceFile, destinationFile);
+                        }
+                    }                    
                 }
 #endif
             }

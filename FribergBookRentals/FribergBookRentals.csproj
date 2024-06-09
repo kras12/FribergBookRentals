@@ -25,9 +25,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\BookList.txt">
+    <None Update="Files\MockData\BookList.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-
-</Project>
+  
+  <ItemGroup>
+    <Content Include="Files\Mockdata\Images\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup></Project>
