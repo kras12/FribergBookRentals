@@ -11,6 +11,13 @@ namespace FribergBookRentalsTest.Tests.Pages
 {
     public class TestRegisterPage : TestBase
     {
+
+        #region Fields
+
+        private readonly User _registerUserData = new User("Kajsa", "Anka", "kajsa@ankeborg.com");
+
+        #endregion
+
         #region Methods
 
         [Fact]
@@ -26,11 +33,11 @@ namespace FribergBookRentalsTest.Tests.Pages
             emailSender.Setup(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
             var newUserInput = new RegisterModel.InputModel();
-            newUserInput.FirstName = "Kalle";
-            newUserInput.LastName = "Anka";
-            newUserInput.Email = "kalle@ankeborg.com";
-            newUserInput.Password = "Aa!12345678";
-            newUserInput.ConfirmPassword = "Aa!12345678";
+            newUserInput.FirstName = _registerUserData.FirstName;
+            newUserInput.LastName = _registerUserData.LastName;
+            newUserInput.Email = _registerUserData.Email;
+            newUserInput.Password = DefaultUserPassword;
+            newUserInput.ConfirmPassword = DefaultUserPassword;
 
             var registerPage = new Mock<RegisterModel>(_userManager.Object, _userStore, signingManagerMock.Object, emailSender.Object);
             registerPage.Setup(x => x.GetCallBackUrl(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).Returns(string.Empty);
@@ -42,17 +49,17 @@ namespace FribergBookRentalsTest.Tests.Pages
             //Act
 
             await registerPage.Object.OnPostAsync("/");
-            var fetchedUser = await _userManager.Object.FindByEmailAsync("kalle@ankeborg.com");
-            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, "Aa!12345678");
+            var fetchedUser = await _userManager.Object.FindByEmailAsync(_registerUserData.Email);
+            var passwordTest = await _userManager.Object.CheckPasswordAsync(fetchedUser!, DefaultUserPassword);
             var userRoles = await _userManager.Object.GetRolesAsync(fetchedUser!);          
             
             //Assert
 
             Assert.True(registerPage.Object.ModelState.IsValid, "Model state is not valid.");
             Assert.NotNull(fetchedUser);
-            Assert.True(fetchedUser.FirstName == "Kalle", "First name is invalid.");
-            Assert.True(fetchedUser.LastName == "Anka", "Last name is invalid.");
-            Assert.True(fetchedUser.Email == "kalle@ankeborg.com", "Email is invalid.");
+            Assert.True(fetchedUser.FirstName == _registerUserData.FirstName, "First name is invalid.");
+            Assert.True(fetchedUser.LastName == _registerUserData.LastName, "Last name is invalid.");
+            Assert.True(fetchedUser.Email == _registerUserData.Email, "Email is invalid.");
             Assert.True(passwordTest, "Password validation failed.");
             Assert.True(userRoles.Contains(ApplicationUserRoles.Member), "Invalid user roles.");
         }
