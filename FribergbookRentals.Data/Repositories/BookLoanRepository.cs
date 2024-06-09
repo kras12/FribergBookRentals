@@ -31,12 +31,12 @@ namespace FribergbookRentals.Data.Repositories
             return bookLoan;
         }
 
-        public async Task<BookLoan> AddAsync(DateTime startTime, DateTime endTime, string userId, int bookId)
+        public async Task<BookLoan> AddAsync(DateTime startTime, TimeSpan newEndTimeOffset, string userId, int bookId)
 		{
 			var user = _applicationDbContext.Users.Find(userId) ?? throw new Exception("User not found");
 			var book = _applicationDbContext.Books.Find(bookId) ?? throw new Exception("Book not found");
 
-			var newBookLoan = new BookLoan(startTime, endTime, user, book);
+			var newBookLoan = new BookLoan(startTime, startTime.Add(newEndTimeOffset), user, book);
 			_applicationDbContext.BookLoans.Add(newBookLoan);
 			await _applicationDbContext.SaveChangesAsync();
 			return newBookLoan;
@@ -62,13 +62,13 @@ namespace FribergbookRentals.Data.Repositories
 			return false;
 		}
 
-        public async Task<bool> TryProlongLoanAsync(string userId, int loanId, int days)
+        public async Task<bool> TryProlongLoanAsync(string userId, int loanId, TimeSpan newEndTimeOffset)
         {
             var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId).SingleOrDefaultAsync();
 
             if (loan != null)
             {
-				await ProlongBookLoanAsync(loan, DateTime.Now.AddDays(days));
+				await ProlongBookLoanAsync(loan, newEndTimeOffset);
                 return true;
             }
 
@@ -102,7 +102,7 @@ namespace FribergbookRentals.Data.Repositories
             return await _applicationDbContext.BookLoans.Where(b => b.User.Id == userId).ToListAsync();
         }
 
-		public async Task<BookLoan> ProlongBookLoanAsync(BookLoan bookLoan, DateTime newEndTime)
+		public async Task<BookLoan> ProlongBookLoanAsync(BookLoan bookLoan, TimeSpan newEndTimeOffset)
 		{
 			if (bookLoan.ClosedTime.HasValue)
 			{
@@ -110,7 +110,7 @@ namespace FribergbookRentals.Data.Repositories
 			}
 
 			_applicationDbContext.Attach(bookLoan);
-			bookLoan.EndTime = newEndTime;
+			bookLoan.EndTime = DateTime.Now.Add(newEndTimeOffset);
 			await _applicationDbContext.SaveChangesAsync();
 			return bookLoan;
 		}

@@ -134,7 +134,7 @@ namespace FribergBookRentals.Controllers.Member
         private async Task<bool> TryProlongBookLoan(int bookLoanId)
         {
             string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
-            return await _bookLoanRepository.TryProlongLoanAsync(userId, bookLoanId, BookLoanData.BookLoanDurationInDays);
+            return await _bookLoanRepository.TryProlongLoanAsync(userId, bookLoanId, TimeSpan.FromDays(BookLoanData.BookLoanDurationInDays - 1));
         }
 
         #endregion

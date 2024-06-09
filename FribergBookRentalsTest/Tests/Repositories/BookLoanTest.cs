@@ -47,7 +47,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
             var book = (await bookRepository.GetBooksAsync()).First(); 
 
             // Act
-            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, DateTime.Now, TimeSpan.FromDays(BookLoanTime - 1));
 
             // Assert
             var bookLoanUserResult = await bookLoanRepository.GetBookLoanByUserIdAsync(user.Id);
@@ -64,7 +64,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
             // Arrange
             var user = await GetDefaultUser();
             var book = (await bookRepository.GetBooksAsync()).First();
-            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, DateTime.Now, TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             var result = await bookLoanRepository.CloseLoanAsync(bookLoan);
@@ -82,7 +82,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
             int loanCount = 10;
             var user = await GetDefaultUser();
             var books = (await bookRepository.GetBooksAsync()).Take(loanCount).ToList();
-            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books, createActiveLoans: true, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books, createActiveLoans: true, DateTime.Now, TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
@@ -100,7 +100,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
             int loanCount = 10;
             var user = await GetDefaultUser();
             var books = (await bookRepository.GetBooksAsync()).Take(loanCount).ToList();
-            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books, createActiveLoans: false, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books, createActiveLoans: false, DateTime.Now, TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             List<BookLoan> bookLoans = await bookLoanRepository.GetBookLoansByUserIdAsync(user.Id);
@@ -119,10 +119,10 @@ namespace FribergBookRentalsTest.Tests.Repositories
             var user = await GetDefaultUser();
             var book = (await bookRepository.GetBooksAsync()).First();
             BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, 
-                startTime: DateTime.Now.AddDays(offsetDays), endTime: DateTime.Now.AddDays(offsetDays).AddDays(BookLoanTime - 1));
+                startTime: DateTime.Now.AddDays(offsetDays), endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
-            BookLoan prolongedBookLoan = await bookLoanRepository.ProlongBookLoanAsync(bookLoan, DateTime.Now.AddDays(BookLoanTime - 1));
+            BookLoan prolongedBookLoan = await bookLoanRepository.ProlongBookLoanAsync(bookLoan, TimeSpan.FromDays(BookLoanTime - 1));
 
             // Assert
             Assert.Null(prolongedBookLoan.ClosedTime);
@@ -140,7 +140,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
             var user = await GetDefaultUser();
             var book = (await bookRepository.GetBooksAsync()).First();
             BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: false,
-                startTime: DateTime.Now.AddDays(offsetDays), endTime: DateTime.Now.AddDays(offsetDays).AddDays(BookLoanTime - 1));
+                startTime: DateTime.Now.AddDays(offsetDays), endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             // Assert
@@ -159,9 +159,9 @@ namespace FribergBookRentalsTest.Tests.Repositories
             DateTime startTimeClosedLoans = DateTime.Now.AddDays(-BookLoanTime);
 
             await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Take(numberOfActiveLoans).ToList(), createActiveLoans: true, 
-                startTime: startTimeActiveLoans, endTime: startTimeActiveLoans.AddDays(BookLoanTime - 1));
+                startTime: startTimeActiveLoans, endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
             await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Take(numberOfExpiredLoans).ToList(), createActiveLoans: true, 
-                startTime: startTimeClosedLoans, endTime: startTimeClosedLoans.AddDays(BookLoanTime - 1));
+                startTime: startTimeClosedLoans, endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             await bookLoanRepository.CloseExpiredBookLoans();

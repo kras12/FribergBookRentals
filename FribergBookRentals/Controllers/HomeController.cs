@@ -176,7 +176,7 @@ namespace FribergBookRentals.Controllers
 
         private async Task CreateBookLoan(int id)
         {
-            await _bookLoanRepository.AddAsync(DateTime.Now, DateTime.Now.AddDays(BookLoanData.BookLoanDurationInDays), GetUserId(), id);
+            await _bookLoanRepository.AddAsync(DateTime.Now, TimeSpan.FromDays(BookLoanData.BookLoanDurationInDays - 1), GetUserId(), id);
         }
 
         #endregion
