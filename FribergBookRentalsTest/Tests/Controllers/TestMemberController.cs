@@ -15,7 +15,7 @@ using System.Security.Claims;
 
 namespace FribergBookRentalsTest.Tests.Controllers
 {
-    public class TestMemberController : TestBase
+    public class TestMemberController : TestControllerBase
     {
         #region Constants
 

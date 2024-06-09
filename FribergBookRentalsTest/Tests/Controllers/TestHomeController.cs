@@ -18,7 +18,7 @@ using FribergbookRentals.Data.Constants;
 
 namespace FribergBookRentalsTest.Tests.Controllers
 {
-    public class TestHomeController : TestBase
+    public class TestHomeController : TestControllerBase
     {
         #region Fields
 
@@ -46,56 +46,35 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         #endregion
 
-        #region Methods
+        #region Methods        
 
         private async Task<HomeController> CreateHomeController(bool isUserAuthenticated)
         {
-            var contextAccessorMock = new Mock<IHttpContextAccessor>();
-            var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
-            var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
-            var userMock = new Mock<ClaimsPrincipal>();
-            var claimsPrincipalMock = new Mock<UserClaimsPrincipalFactory<User>>();
-            var tempDataHelperMock = new Mock<ITempDataHelper>();
+            // User
+            var userMock = CreateUserMock(isUserAuthenticated, ApplicationUserRoles.Member);
 
-            //userMock.Expect(p => p.IsInRole("admin")).Returns(true);            
-            contextAccessorMock.SetupGet(x => x.HttpContext!.User)
-                       .Returns(userMock.Object);
-            //contextAccessorMock.SetupGet(x => x.HttpContext!.User.Identity!.IsAuthenticated)
-            //                     .Returns(isUserAuthenticated);
+            // Signing manager
+            var signinManagerMock = CreateSigningManagerMock(userMock, isUserAuthenticated);
+            
+            // Controller context
+            var controllerContextMock = CreateControllerContextMock(userMock);
 
-            userMock.Setup(x => x.IsInRole(ApplicationUserRoles.Member)).Returns(isUserAuthenticated);
-            signingManagerMock.Setup(x => x.IsSignedIn(It.IsAny<ClaimsPrincipal>())).Returns(isUserAuthenticated);
-
-
-            // public ActionContext(
-            //        HttpContext httpContext,
-            //        RouteData routeData,
-            //    ActionDescriptor actionDescriptor)
-            //    : this(httpContext, routeData, actionDescriptor, new ModelStateDictionary())
-
-            var httpContext = new DefaultHttpContext();
-            httpContext.User = userMock.Object;
-            var actionContext = new ActionContext(httpContext, new Microsoft.AspNetCore.Routing.RouteData(), 
-                new ControllerActionDescriptor(), new ModelStateDictionary());
-            var controllerContextMock = new Mock<ControllerContext>(actionContext);
-            //controllerContextMock.SetupGet(x => x.HttpContext.User.Identity!.IsAuthenticated)
-            //                     .Returns(isUserAuthenticated);
-            //controllerContextMock.SetupGet(x => x.HttpContext)
-            //                     .Returns(new DefaultHttpContext());
-
+            // Home controller mock
             var user = await GetDefaultUser();
-
-            var homeControllerMock = new Mock<HomeController>(_bookRepository, _autoMapper, signingManagerMock.Object, _bookLoanRepository, tempDataHelperMock.Object);
-            //homeControllerMock.SetupGet(x => x.ControllerContext).Returns(controllerContextMock.Object);
+            var tempDataHelperMock = new Mock<ITempDataHelper>();
+            var homeControllerMock = new Mock<HomeController>(_bookRepository, _autoMapper, signinManagerMock.Object, _bookLoanRepository, tempDataHelperMock.Object);
             homeControllerMock.Setup(x => x.GetUserId()).Returns(user.Id);
 
-            //homeController.ControllerContext = controllerContextMock.Object;
-
+            // Home controller
             var homeController = homeControllerMock.Object;
             homeController.ControllerContext = controllerContextMock.Object;
             
             return homeController;
         }
+
+        #endregion
+
+        #region Tests
 
         [InlineData(true)]
         [InlineData(false)]
@@ -119,8 +98,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
             else
             {
                 Assert.DoesNotContain(bookLoans, x => x.Book.BookId == book.Id && x.User.Id == user.Id);
-            }
-            
+            }            
         }
 
         [Fact]
@@ -140,10 +118,6 @@ namespace FribergBookRentalsTest.Tests.Controllers
             Assert.True(homeController.ModelState.IsValid);
             Assert.True(searchResult.HaveSearchedBooks);
             Assert.True(searchResult.Books!.Count > 0);
-
-            //userMock.Verify(p => p.IsInRole("admin"));
-            //Assert.Equal("Index", ((ViewResult)result).ViewName);
-            //Assert.Equal(StatusCodes.Status200OK, ((ViewResult)result).StatusCode!.Value);
         }
 
         #endregion
