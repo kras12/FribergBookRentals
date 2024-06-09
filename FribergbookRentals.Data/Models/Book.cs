@@ -9,6 +9,26 @@ namespace FribergbookRentals.Data.Models
 {
 	public class Book
 	{
+        #region Constructors
+
+        public Book()
+        {
+
+        }
+
+        public Book(string author, string country, string language, int numberOfPages, string title, int year, string? informationUrl = null, string? imageName = null)
+        {
+            Author = author;
+            Country = country;
+            Language = language;
+            NumberOfPages = numberOfPages;
+            Title = title;
+            Year = year;
+            InformationUrl = informationUrl;
+            ImageName = imageName;
+        }
+        
+        #endregion
 
         #region Properties
 
@@ -29,28 +49,8 @@ namespace FribergbookRentals.Data.Models
 
 		public string? InformationUrl { get; set; } = null;
 
+		public string? ImageName { get; set; } = null;
 
-        #endregion
-
-        #region Constructors
-
-  
-
-        public Book()
-        {
-            
-        }
-
-		public Book(string author, string country, string language, int numberOfPages, string title, int year, string? informationUrl = null)
-		{
-			Author = author;
-			Country = country;
-			Language = language;
-			NumberOfPages = numberOfPages;
-			Title = title;
-			Year = year;
-			InformationUrl = informationUrl;
-		}
-		#endregion
+        #endregion        
 	}
 }
