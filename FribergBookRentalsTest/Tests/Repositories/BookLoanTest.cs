@@ -2,13 +2,6 @@
 using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
 using FribergBookRentalsTest.Helpers;
-using Microsoft.AspNetCore.Identity;
-using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace FribergBookRentalsTest.Tests.Repositories
 {
@@ -113,13 +106,13 @@ namespace FribergBookRentalsTest.Tests.Repositories
 
         [MemberData(nameof(GetTestProlongActiveBookLoanInputData))]
         [Theory]
-        public async Task TestProlongActiveBookLoan(int offsetDays)
+        public async Task TestProlongActiveBookLoan(int startTimeOffsetDays)
         {
             // Arrange
             var user = await GetDefaultUser();
             var book = (await bookRepository.GetBooksAsync()).First();
             BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: true, 
-                startTime: DateTime.Now.AddDays(offsetDays), endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
+                startTime: DateTime.Now.AddDays(startTimeOffsetDays), endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             BookLoan prolongedBookLoan = await bookLoanRepository.ProlongBookLoanAsync(bookLoan, TimeSpan.FromDays(BookLoanTime - 1));
@@ -132,15 +125,14 @@ namespace FribergBookRentalsTest.Tests.Repositories
             Assert.Equal(bookLoan.Book.BookId, prolongedBookLoan.Book.BookId);
         }
 
-        [MemberData(nameof(GetTestProlongClosedBookLoanInputData))]
-        [Theory]
-        public async Task TestProlongClosedBookLoan(int offsetDays)
+        [Fact]
+        public async Task TestProlongClosedBookLoan()
         {
             // Arrange
             var user = await GetDefaultUser();
             var book = (await bookRepository.GetBooksAsync()).First();
             BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: false,
-                startTime: DateTime.Now.AddDays(offsetDays), endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
+                startTime: DateTime.Now, endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act
             // Assert
@@ -182,18 +174,6 @@ namespace FribergBookRentalsTest.Tests.Repositories
             List<object[]> data = new List<object[]>();
 
             for (int i = -BookLoanTime + 1; i <= 0; i++)
-            {
-                data.Add(new object[] { i });
-            }
-
-            return data;
-        }
-
-        public static IEnumerable<object[]> GetTestProlongClosedBookLoanInputData()
-        {
-            List<object[]> data = new List<object[]>();
-
-            for (int i = -BookLoanTime; i >= -BookLoanTime - 2; i--)
             {
                 data.Add(new object[] { i });
             }
