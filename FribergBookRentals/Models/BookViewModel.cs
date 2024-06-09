@@ -17,6 +17,37 @@ namespace FribergbookRentals.Models
 
 		public string Country { get; set; } = "";
 
+        public string? ImageName { get; set; } = null;
+
+        public string? ImageUrl
+        {
+            get
+            {
+                if (HaveImage)
+                {
+                    return $"uploads/{ImageName}";
+                }
+
+                return null;
+            }
+        }
+
+        public bool HaveImage
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(ImageName);
+            }
+        }
+
+        public bool HaveInformationUrl
+        {
+            get
+            {
+                return !string.IsNullOrEmpty(InformationUrl);
+            }
+        }
+
         public string? InformationUrl { get; set; } = null;
 
         public string Language { get; set; } = "";

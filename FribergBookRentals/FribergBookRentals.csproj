@@ -34,4 +34,8 @@
     <Content Include="Files\Mockdata\Images\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\" />
   </ItemGroup></Project>

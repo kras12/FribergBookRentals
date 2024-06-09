@@ -190,7 +190,11 @@ body {
 /* Elements                                         */
 /*==================================================*/
 
-:is(nav a, .btn, a>.card):hover
+.card-header a {
+    display: block;
+}
+
+:is(nav a, .btn, a>.card, .card-header a):hover
 {
   background-color: var(--action-element-hover-background-color);
   border-color: var(--box-shadow-hover-color);
@@ -291,6 +295,10 @@ select.form-control {
 /*==================================================*/
 /* Images                                           */
 /*==================================================*/ 
+
+.book-cover-image {
+    max-height: 20rem;
+}
 
 /* Broker Firm Logotype */
 .broker-firm-logotype {

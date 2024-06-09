@@ -1,4 +1,5 @@
 using AutoMapper;
+using Elfie.Serialization;
 using FribergbookRentals.Data.Constants;
 using FribergbookRentals.Data.Dto;
 using FribergbookRentals.Data.Models;
@@ -9,6 +10,7 @@ using FribergBookRentals.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Security.Claims;
 using System.Text.Json;
 
@@ -110,10 +112,10 @@ namespace FribergBookRentals
                     bookRepository.AddBooksAsync(books!).Wait();
 
                     string resourceImageFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Files", "MockData", "Images");
-                    string uploadsFolder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Uploads");
+                    string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");                    
 
-					if (!Directory.Exists(uploadsFolder))
-					{
+                    if (!Directory.Exists(uploadsFolder))
+                    {
 						Directory.CreateDirectory(uploadsFolder);
 					}
 
