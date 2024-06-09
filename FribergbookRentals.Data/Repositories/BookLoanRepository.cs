@@ -51,7 +51,7 @@ namespace FribergbookRentals.Data.Repositories
 
         public async Task<bool> TryCloseLoanAsync(string userId, int loanId)
         {
-			var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId).SingleOrDefaultAsync();
+			var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId && x.ClosedTime == null).SingleOrDefaultAsync();
 
 			if (loan != null)
 			{
@@ -75,6 +75,10 @@ namespace FribergbookRentals.Data.Repositories
             return false;
         }
 
+        public async Task<BookLoan?> GetBookLoanByIdAsync(int id)
+		{
+			return await _applicationDbContext.BookLoans.FirstOrDefaultAsync(x => x.Id == id);
+		}
 
         public async Task<BookLoan?> GetBookLoanByUserIdAsync(string userId)
 		{
@@ -115,7 +119,7 @@ namespace FribergbookRentals.Data.Repositories
 			return bookLoan;
 		}
 
-		public async Task<int> CloseExpiredBookLoans()
+        public async Task<int> CloseExpiredBookLoans()
 		{
 			var loans = await _applicationDbContext.BookLoans
 				.Where(x => x.ClosedTime == null && x.EndTime.Date < DateTime.Now.Date)
