@@ -8,6 +8,8 @@ using FribergBookRentals.Mapper;
 using FribergBookRentals.Models;
 using FribergBookRentals.Services;
 using FribergBookRentalsTest.Helpers;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Moq;
@@ -43,31 +45,32 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         #region Methods
 
-        [Fact]
-        public async Task TestListBookLoans()
+        private async Task<MemberController> CreateMemberController(bool isUserLoggedIn)
+        {
+            // User
+            var user = await GetDefaultUser();
+            ClaimsPrincipal claimsPrincipal = CreateClaimsPrincipal(user, isUserLoggedIn);
+
+            // Controller context
+            var controllerContextMock = CreateControllerContextMock(claimsPrincipal);
+
+            // Member controller
+            var tempDataHelperMock = new Mock<ITempDataHelper>();
+            var controller = new MemberController(_bookLoanRepository, _autoMapper, _bookRepository, tempDataHelperMock.Object);
+            controller.ControllerContext = controllerContextMock.Object;    
+
+            return controller;
+        }
+
+        [InlineData(true)]
+        [InlineData(false)]
+        [Theory]
+        public async Task TestListBookLoans(bool isUserAuthenticated)
         {
             // Arrange
-            var user = await _userManager.Object.FindByEmailAsync(_defaultSeedUserData.Email!);
-            var tempDataHelperMock = new Mock<ITempDataHelper>();
-
-            var claimsPrincipal = new ClaimsPrincipal(new List<ClaimsIdentity>()
-            {
-                new ClaimsIdentity(new List<Claim>()
-                {
-                    new Claim(ApplicationUserClaims.UserId, user.Id),
-                    new Claim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member)
-                })
-            });
-
-            var httpContextMock = new HttpContextMoq.HttpContextMock();
-            httpContextMock.User = claimsPrincipal;
-
-            var memberController = new MemberController(_bookLoanRepository, _autoMapper, _bookRepository, tempDataHelperMock.Object);
-            memberController.ControllerContext.HttpContext = httpContextMock;
-            memberController.TempData = new TempDataDictionary(httpContextMock, Mock.Of<ITempDataProvider>());
-
+            var user = await GetDefaultUser();
+            var memberController = await CreateMemberController(isUserAuthenticated);
             var books = await _bookRepository.GetBooksAsync();
-
             int activeLoans = 10;
             int closedLoans = 8;
 
@@ -75,17 +78,25 @@ namespace FribergBookRentalsTest.Tests.Controllers
             await BookLoanHelper.CreateBookLoans(_bookLoanRepository, user, books.Skip(activeLoans).Take(closedLoans).ToList(), createActiveLoans: false, DateTime.Now, DateTime.Now.AddDays(BookLoanTime - 1));
 
             // Act
-            var result = (await memberController.Index()) as ViewResult;
+            var result = await memberController.Index();
 
             // Assert
-            Assert.NotNull(result);
-            var model = result!.Model as MemberBookLoansViewModel;
+            if (isUserAuthenticated)
+            {
+                var viewResult = result as ViewResult;
+                Assert.NotNull(viewResult);
 
-            Assert.NotNull(model);
-            Assert.True(model.ActiveLoans.Count == activeLoans, "Failed active loans count");
-            Assert.True(model.ClosedLoans.Count == closedLoans, "Failed closed loans count");
-            Assert.All(model.ActiveLoans, x => Assert.Null(x.ClosedTime));
-            Assert.All(model.ClosedLoans, x => Assert.NotNull(x.ClosedTime));
+                var model = viewResult!.Model as MemberBookLoansViewModel;
+                Assert.NotNull(model);
+                Assert.True(model.ActiveLoans.Count == activeLoans, "Failed active loans count");
+                Assert.True(model.ClosedLoans.Count == closedLoans, "Failed closed loans count");
+                Assert.All(model.ActiveLoans, x => Assert.Null(x.ClosedTime));
+                Assert.All(model.ClosedLoans, x => Assert.NotNull(x.ClosedTime));
+            }
+            else
+            {
+                Assert.IsType<UnauthorizedResult>(result);
+            }            
         }
 
         #endregion

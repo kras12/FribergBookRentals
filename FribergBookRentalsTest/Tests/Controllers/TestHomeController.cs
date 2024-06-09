@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using FribergBookRentals.Services;
 using FribergbookRentals.Data.Constants;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 
 namespace FribergBookRentalsTest.Tests.Controllers
@@ -75,21 +76,18 @@ namespace FribergBookRentalsTest.Tests.Controllers
 
         #region Methods        
 
-        private async Task<HomeController> CreateHomeController(bool isUserAuthenticated)
+        private async Task<HomeController> CreateHomeController(bool isUserLoggedIn)
         {
             // User
             var user = await GetDefaultUser();
-            var userClaims = CreateUserClaims(user);
+            ClaimsPrincipal claimsPrincipal = CreateClaimsPrincipal(user, isUserLoggedIn);
 
-            // Signing manager
-            var signinManagerMock = CreateSigningManagerMock(userClaims, isUserAuthenticated);
-            
             // Controller context
-            var controllerContextMock = CreateControllerContextMock(userClaims);
+            var controllerContextMock = CreateControllerContextMock(claimsPrincipal);
 
             // Home controller
             var tempDataHelperMock = new Mock<ITempDataHelper>();
-            var homeController = new HomeController(_bookRepository, _autoMapper, signinManagerMock.Object, _bookLoanRepository, tempDataHelperMock.Object);
+            var homeController = new HomeController(_bookRepository, _autoMapper, _bookLoanRepository, tempDataHelperMock.Object);
             homeController.ControllerContext = controllerContextMock.Object;
             
             return homeController;
@@ -129,7 +127,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
         public async Task TestSearchBooks(BookSearchInputViewModel searchInput)
         {
             // Arrange
-            var homeController = await CreateHomeController(false);
+            var homeController = await CreateHomeController(isUserLoggedIn: false);
 
             // Act
             var result = await homeController.Index(searchInput);

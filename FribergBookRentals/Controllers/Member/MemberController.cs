@@ -52,6 +52,11 @@ namespace FribergBookRentals.Controllers.Member
         [Authorize(Roles = ApplicationUserRoles.Member)]
         public async Task<IActionResult> Index()
         {
+            if (!User.Identity!.IsAuthenticated || !User.IsInRole(ApplicationUserRoles.Member))
+            {
+                return Unauthorized();
+            }
+
             List<BookLoanViewModel> activeLoans = _autoMapper.Map<List<BookLoanViewModel>>(await _bookLoanRepository.GetActiveBookLoansAsync(User.Claims.Single(x => x.Type == ApplicationUserClaims.UserId).Value));
             List<BookLoanViewModel> closedLoans = _autoMapper.Map<List<BookLoanViewModel>>(await _bookLoanRepository.GetClosedBookLoansAsync(User.Claims.Single(x => x.Type == ApplicationUserClaims.UserId).Value));
             //activeLoans = closedLoans;

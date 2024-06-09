@@ -42,15 +42,22 @@ namespace FribergBookRentalsTest.Tests.Controllers
             return signingManagerMock;
         }
 
-        protected ClaimsPrincipal CreateUserClaims(User user)
+        protected ClaimsPrincipal CreateClaimsPrincipal(User user, bool isUserLoggedIn)
         {
-            var result = new ClaimsPrincipal();
+            var mock = new Mock<ClaimsPrincipal>();
+            mock.SetupGet(x => x.Identity!.IsAuthenticated).Returns(isUserLoggedIn);
+            mock.Setup(x => x.AddIdentity(It.IsAny<ClaimsIdentity>())).CallBase();
+            mock.CallBase = true;
+            ClaimsPrincipal result = mock.Object;
 
-            result.AddIdentity(new ClaimsIdentity(new List<Claim>()
+            if (isUserLoggedIn)
             {
-                new Claim(ApplicationUserClaims.UserId, user.Id),
-                new Claim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member),
-            }));
+                result.AddIdentity(new ClaimsIdentity(new List<Claim>()
+                {
+                    new Claim(ApplicationUserClaims.UserId, user.Id),
+                    new Claim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member)
+                }));
+            }
 
             return result;
         }

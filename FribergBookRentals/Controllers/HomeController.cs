@@ -35,20 +35,17 @@ namespace FribergBookRentals.Controllers
 
         private readonly IBookLoanRepository _bookLoanRepository;
 
-        private readonly SignInManager<User> _signInManager;
-
         private readonly ITempDataHelper _tempDataHelper;
 
         #endregion
 
         #region Constructors
 
-        public HomeController(IBookRepository bookRepository, IMapper autoMapper, SignInManager<User> signInManager, 
+        public HomeController(IBookRepository bookRepository, IMapper autoMapper,  
             IBookLoanRepository bookLoanRepository, ITempDataHelper tempDataHelper)
         {
             _bookRepository = bookRepository;
             _autoMapper = autoMapper;
-            _signInManager = signInManager;
             _bookLoanRepository = bookLoanRepository;
             _tempDataHelper = tempDataHelper;
         }
@@ -67,7 +64,7 @@ namespace FribergBookRentals.Controllers
         {
             if (_tempDataHelper.TryGet(TempData, BorrowBookAfterLoginKey, out int bookId))
             {            
-                if (_signInManager.IsSignedIn(User) && User.IsInRole(ApplicationUserRoles.Member))
+                if (User.Identity!.IsAuthenticated && User.IsInRole(ApplicationUserRoles.Member))
                 {
                     await TryBorrowBook(bookId);
                 }
@@ -103,7 +100,7 @@ namespace FribergBookRentals.Controllers
                 var searchInputDto = _autoMapper.Map<BookSearchInputDto>(searchInput);
                 books = _autoMapper.Map<List<BookViewModel>>(await _bookRepository.SearchBooksAsync(searchInputDto));
 
-                if (_signInManager.IsSignedIn(User) && User.IsInRole(ApplicationUserRoles.Member))
+                if (User.Identity!.IsAuthenticated && User.IsInRole(ApplicationUserRoles.Member))
                 {
                     string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
                     var borrowedBooks = await _bookLoanRepository.GetActiveBookLoansAsync(userId);
@@ -128,7 +125,7 @@ namespace FribergBookRentals.Controllers
         [HttpPost]
         public async Task<IActionResult> BorrowBook([FromForm] int id)
         {
-            if (!_signInManager.IsSignedIn(User))
+            if (!User.Identity!.IsAuthenticated || !User.IsInRole(ApplicationUserRoles.Member))
             {
                 _tempDataHelper.Set(TempData, BorrowBookAfterLoginKey, id);
                 return RedirectToPage("/Account/Login", new { area = "Identity", returnUrl = "/" });
