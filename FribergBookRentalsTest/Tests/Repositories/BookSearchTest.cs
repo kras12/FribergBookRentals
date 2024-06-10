@@ -22,7 +22,8 @@ namespace FribergBookRentalsTest.Tests.Repositories
             new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart") },
             new object[] { new BookSearchInputDto(searchPhrase: "Chinua Achebe") },
             new object[] { new BookSearchInputDto(searchPhrase: "Things Fall Apart Chinua Achebe") },
-
+            new object[] { new BookSearchInputDto(searchPhrase: "Things") },
+            new object[] { new BookSearchInputDto(searchPhrase: "Chinua") },
 
             new object[] { new BookSearchInputDto(language: "English") },
             new object[] { new BookSearchInputDto(year: 1958) },

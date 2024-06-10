@@ -17,6 +17,9 @@ using Microsoft.Extensions.Logging;
 using FribergbookRentals.Data.Constants;
 using AutoMapper;
 using FribergBookRentals.Mapper;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
 
 namespace FribergBookRentalsTest
 {
@@ -125,6 +128,44 @@ namespace FribergBookRentalsTest
 			await _userManager.Object.AddToRoleAsync(user, ApplicationUserRoles.Member);
         }
 
-		#endregion
-	}
+        protected Mock<SignInManager<User>> CreateSigningManagerMock(ClaimsPrincipal user, bool isUserAuthenticated)
+        {
+            var contextAccessorMock = new Mock<IHttpContextAccessor>();
+            var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
+            var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
+
+            signingManagerMock.Setup(x => x.IsSignedIn(It.IsAny<ClaimsPrincipal>())).Returns(isUserAuthenticated);
+            contextAccessorMock.SetupGet(x => x.HttpContext!.User)
+                       .Returns(user);
+
+            signingManagerMock.Setup(x => x.GetExternalAuthenticationSchemesAsync())
+                .Returns(Task.FromResult(new List<AuthenticationScheme>().AsEnumerable()));
+
+            signingManagerMock.Setup(x => x.PasswordSignInAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()))
+                .Returns(Task.FromResult(Microsoft.AspNetCore.Identity.SignInResult.Success));
+
+            return signingManagerMock;   
+        }
+
+        protected ClaimsPrincipal CreateClaimsPrincipal(User user, bool isUserLoggedIn)
+        {
+            var mock = new Mock<ClaimsPrincipal>();
+            mock.SetupGet(x => x.Identity!.IsAuthenticated).Returns(isUserLoggedIn);
+            mock.Setup(x => x.AddIdentity(It.IsAny<ClaimsIdentity>())).CallBase();
+            mock.CallBase = true;
+            ClaimsPrincipal result = mock.Object;
+
+            if (isUserLoggedIn)
+            {
+                result.AddIdentity(new ClaimsIdentity(new List<Claim>()
+                {
+                    new Claim(ApplicationUserClaims.UserId, user.Id),
+                    new Claim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member)
+                }));
+            }
+
+            return result;
+        }
+        #endregion
+    }
 }

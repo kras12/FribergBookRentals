@@ -131,7 +131,6 @@ namespace WebApplication1.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
 
             //Input.Password = "A";
-            //Input.FirstName = Input.LastName;
 
             if (ModelState.IsValid)
             {

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FribergbookRentals.Data.Constants;
+using FribergbookRentals.Data.Exceptions;
 using FribergbookRentals.Data.Models;
 using FribergbookRentals.Data.Repositories;
 using FribergBookRentals.Constants;
@@ -98,11 +99,13 @@ namespace FribergBookRentals.Controllers.Member
                 return Unauthorized();
             }
 
-            if (await TryCloseBookLoan(bookLoanId))
+            try
             {
+                string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
+                await _bookLoanRepository.CloseLoanAsync(userId, bookLoanId);
                 _tempDataHelper.Set(TempData, BookLoanClosedResultKey, true);
             }
-            else
+            catch (BookLoanNotFoundException ex)
             {
                 return NotFound();
             }
@@ -119,32 +122,18 @@ namespace FribergBookRentals.Controllers.Member
                 return Unauthorized();
             }
 
-            if (await TryProlongBookLoan(bookLoanId))
+            try
             {
+                string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
+                await _bookLoanRepository.ProlongLoanAsync(userId, bookLoanId, TimeSpan.FromDays(BookLoanData.BookLoanDurationInDays - 1));
                 _tempDataHelper.Set(TempData, BookLoanProlongedResultKey, true);
             }
-            else
+            catch (BookLoanNotFoundException ex)
             {
                 return NotFound();
             }
 
             return RedirectToAction(nameof(Index));
-        }
-
-        #endregion
-
-        #region Methods
-
-        private async Task<bool> TryCloseBookLoan(int bookLoanId)
-        {
-            string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
-            return await _bookLoanRepository.TryCloseLoanAsync(userId, bookLoanId);
-        }
-
-        private async Task<bool> TryProlongBookLoan(int bookLoanId)
-        {
-            string userId = User.Claims.First(x => x.Type == ApplicationUserClaims.UserId).Value;
-            return await _bookLoanRepository.TryProlongLoanAsync(userId, bookLoanId, TimeSpan.FromDays(BookLoanData.BookLoanDurationInDays - 1));
         }
 
         #endregion
