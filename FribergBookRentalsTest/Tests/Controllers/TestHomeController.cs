@@ -118,7 +118,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
             }
             else
             {
-                Assert.DoesNotContain(bookLoans, x => x.Book.BookId == book.Id && x.User.Id == user.Id);
+                Assert.IsType<RedirectToPageResult>(result);
             }            
         }
 

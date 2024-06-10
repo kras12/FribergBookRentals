@@ -3,44 +3,51 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Moq;
 using WebApplication1.Areas.Identity.Pages.Account;
 
 namespace FribergBookRentalsTest.Tests.Pages
 {
-    public class TestLoginPage : TestBase
+    public class TestLoginPage : TestPageBase
     {
         #region Methods
 
-        [Fact]
-        public async Task TestSuccessfulLoginRedirect()
+        [InlineData(true)]
+        [InlineData(false)]
+        [Theory]
+        public async Task TestSuccessfulLoginRedirect(bool isUserLoggedIn)
         {
             //Arrange
-
-            var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, new HttpContextAccessor(), new Mock<IUserClaimsPrincipalFactory<User>>().Object, 
-                null, null, null, null);
-            signingManagerMock.Setup(x => x.GetExternalAuthenticationSchemesAsync())
-                .Returns(Task.FromResult(new List<AuthenticationScheme>().AsEnumerable()));
-            signingManagerMock.Setup(x => x.PasswordSignInAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()))
-                .Returns(Task.FromResult(Microsoft.AspNetCore.Identity.SignInResult.Success));
-            signingManagerMock.CallBase = true;
+            var user = await GetDefaultUser();
+            var claimsPrincipal = CreateClaimsPrincipal(user, isUserLoggedIn);
+            var signinManager = CreateSigningManagerMock(claimsPrincipal, isUserLoggedIn);
 
             var loginInput = new LoginModel.InputModel();
             loginInput.Email = _defaultSeedUserData.Email;
             loginInput.Password = DefaultUserPassword;
             loginInput.RememberMe = false;
 
-            var newLoginPage = new LoginModel(signingManagerMock.Object);
+            var newLoginPage = new LoginModel(signinManager.Object);
             newLoginPage.Input = loginInput;
-
+            var pageContextMock = CreatePageContextMock(claimsPrincipal);
+            newLoginPage.PageContext = pageContextMock.Object;
 
             // Act
 
             var result = await newLoginPage.OnPostAsync("ReturnUrlPlaceHolder");
 
             // Assert
-            Assert.IsType<LocalRedirectResult>(result);
-            Assert.True(((LocalRedirectResult)result).Url == "ReturnUrlPlaceHolder");
+            if (isUserLoggedIn)
+            {
+                Assert.IsType<RedirectToActionResult>(result);                
+            }
+            else
+            {
+                Assert.IsType<LocalRedirectResult>(result);
+                Assert.True(newLoginPage.ModelState.IsValid);
+                Assert.True(((LocalRedirectResult)result).Url == "ReturnUrlPlaceHolder");
+            }           
         }
 
         #endregion

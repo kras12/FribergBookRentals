@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using FribergbookRentals.Data.Models;
+using FribergBookRentals.Controllers.Member;
 
 namespace WebApplication1.Areas.Identity.Pages.Account
 {
@@ -102,9 +103,12 @@ namespace WebApplication1.Areas.Identity.Pages.Account
 
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
-            returnUrl ??= Url.Content("~/");
+            if (User.Identity.IsAuthenticated)
+            {
+                return RedirectToAction(nameof(MemberController.Index), "Member");
+            }
 
-            //ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
+            returnUrl ??= Url.Content("~/");
 
             if (ModelState.IsValid)
             {
@@ -116,10 +120,6 @@ namespace WebApplication1.Areas.Identity.Pages.Account
                 {
                     return LocalRedirect(returnUrl);
                 }
-                //if (result.RequiresTwoFactor)
-                //{
-                //    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                //}
                 if (result.IsLockedOut)
                 {
                     return RedirectToPage("./Lockout");

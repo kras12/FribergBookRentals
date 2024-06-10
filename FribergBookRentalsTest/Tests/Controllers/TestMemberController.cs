@@ -124,6 +124,8 @@ namespace FribergBookRentalsTest.Tests.Controllers
                 Assert.True(model.ClosedLoans.Count == closedLoans, "Failed closed loans count");
                 Assert.All(model.ActiveLoans, x => Assert.Null(x.ClosedTime));
                 Assert.All(model.ClosedLoans, x => Assert.NotNull(x.ClosedTime));
+                Assert.All(model.ActiveLoans, x => Assert.Equal(user.Id, x.User.Id));
+                Assert.All(model.ClosedLoans, x => Assert.Equal(user.Id, x.User.Id));
             }
             else
             {
@@ -152,6 +154,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
             {
                 Assert.IsType<RedirectToActionResult>(result);
                 Assert.NotNull(closedBookLoan!.ClosedTime);
+                Assert.Equal(closedBookLoan.ClosedTime.Value.Date, DateTime.Now.Date);
                 Assert.Equal(targetBookLoan.StartTime, closedBookLoan.StartTime);
                 Assert.Equal(targetBookLoan.EndTime, closedBookLoan.EndTime);
             }
@@ -173,20 +176,18 @@ namespace FribergBookRentalsTest.Tests.Controllers
             await SeedBookLoans(user, closedLoans: numLoans);
             BookLoan targetBookLoan = (await _bookLoanRepository.GetClosedBookLoansAsync(user.Id)).First();
 
-            // Act
-            var result = await memberController.CloseLoan(targetBookLoan.Id);
-            var closedBookLoan = await _bookLoanRepository.GetBookLoanByIdAsync(targetBookLoan.Id);
-
-            // Assert
             if (isUserAuthenticated)
             {
-                Assert.IsType<NotFoundResult>(result);
-                Assert.NotNull(closedBookLoan!.ClosedTime);
-                Assert.Equal(targetBookLoan.StartTime, closedBookLoan.StartTime);
-                Assert.Equal(targetBookLoan.EndTime, closedBookLoan.EndTime);
+                // Act
+                // Assert
+                await Assert.ThrowsAsync<BookLoanClosedException>(async () => await memberController.CloseLoan(targetBookLoan.Id));
             }
             else
             {
+                // Act
+                var result = await memberController.CloseLoan(targetBookLoan.Id);
+                
+                // Assert
                 Assert.IsType<UnauthorizedResult>(result);
             }
         }
@@ -235,7 +236,9 @@ namespace FribergBookRentalsTest.Tests.Controllers
                 Assert.IsType<RedirectToActionResult>(result);
                 Assert.Null(targetBookLoan!.ClosedTime);
                 Assert.Equal(targetBookLoan.StartTime, prolongedBookLoan!.StartTime);
-                Assert.True(prolongedBookLoan!.EndTime > seedTime.AddDays(BookLoanTime - 1) && prolongedBookLoan.EndTime < seedTime.AddDays(BookLoanTime - 1).AddSeconds(1));
+                Assert.True(prolongedBookLoan.EndTime.Date == DateTime.Now.Date.AddDays(BookLoanTime - 1));
+                Assert.Equal(user.Id, prolongedBookLoan.User.Id);
+                Assert.Equal(targetBookLoan.Book.BookId, prolongedBookLoan.Book.BookId);
             }
             else
             {

@@ -27,40 +27,7 @@ namespace FribergBookRentalsTest.Tests.Controllers
                 new ControllerActionDescriptor(), new ModelStateDictionary());
 
             return new Mock<ControllerContext>(actionContext);
-        }
-
-        protected Mock<SignInManager<User>> CreateSigningManagerMock(ClaimsPrincipal user, bool isUserAuthenticated)
-        {
-            var contextAccessorMock = new Mock<IHttpContextAccessor>();
-            var userPrincipalFactoryMock = new Mock<IUserClaimsPrincipalFactory<User>>();
-            var signingManagerMock = new Mock<SignInManager<User>>(_userManager.Object, contextAccessorMock.Object, userPrincipalFactoryMock.Object, null, null, null, null);
-
-            signingManagerMock.Setup(x => x.IsSignedIn(It.IsAny<ClaimsPrincipal>())).Returns(isUserAuthenticated);
-            contextAccessorMock.SetupGet(x => x.HttpContext!.User)
-                       .Returns(user);
-
-            return signingManagerMock;
-        }
-
-        protected ClaimsPrincipal CreateClaimsPrincipal(User user, bool isUserLoggedIn)
-        {
-            var mock = new Mock<ClaimsPrincipal>();
-            mock.SetupGet(x => x.Identity!.IsAuthenticated).Returns(isUserLoggedIn);
-            mock.Setup(x => x.AddIdentity(It.IsAny<ClaimsIdentity>())).CallBase();
-            mock.CallBase = true;
-            ClaimsPrincipal result = mock.Object;
-
-            if (isUserLoggedIn)
-            {
-                result.AddIdentity(new ClaimsIdentity(new List<Claim>()
-                {
-                    new Claim(ApplicationUserClaims.UserId, user.Id),
-                    new Claim(ApplicationUserClaims.UserRole, ApplicationUserRoles.Member)
-                }));
-            }
-
-            return result;
-        }
+        }        
 
         #endregion
     }

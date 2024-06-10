@@ -22,9 +22,9 @@ namespace FribergbookRentals.Data.Repositories
 
 		public Task<BookLoan> CloseLoanAsync(BookLoan bookLoan);
 
-        public Task<bool> TryCloseLoanAsync(string userId, int loanId);
+        public Task CloseLoanAsync(string userId, int loanId);
 
-        public Task<bool> TryProlongLoanAsync(string userId, int loanId, TimeSpan newEndTimeOffset);        
+        public Task ProlongLoanAsync(string userId, int loanId, TimeSpan newEndTimeOffset);        
 
         public Task<BookLoan> ProlongBookLoanAsync(BookLoan bookLoan, TimeSpan newEndTimeOffset);
 

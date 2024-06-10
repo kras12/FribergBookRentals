@@ -69,6 +69,19 @@ namespace FribergBookRentalsTest.Tests.Repositories
         }
 
         [Fact]
+        public async Task TestCloseClosedBookLoan()
+        {
+            // Arrange
+            var user = await GetDefaultUser();
+            var book = (await bookRepository.GetBooksAsync()).First();
+            BookLoan bookLoan = await BookLoanHelper.CreateBookLoan(bookLoanRepository, user, book, createActiveLoans: false, DateTime.Now, TimeSpan.FromDays(BookLoanTime - 1));
+
+            // Act
+            // Assert
+            await Assert.ThrowsAsync<BookLoanClosedException>(async () => await bookLoanRepository.CloseLoanAsync(bookLoan));
+        }
+
+        [Fact]
         public async Task TestListActiveBookLoans()
         {
             // Arrange
@@ -152,7 +165,7 @@ namespace FribergBookRentalsTest.Tests.Repositories
 
             await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Take(numberOfActiveLoans).ToList(), createActiveLoans: true, 
                 startTime: startTimeActiveLoans, endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
-            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Take(numberOfExpiredLoans).ToList(), createActiveLoans: true, 
+            await BookLoanHelper.CreateBookLoans(bookLoanRepository, user, books.Skip(numberOfActiveLoans).Take(numberOfExpiredLoans).ToList(), createActiveLoans: true, 
                 startTime: startTimeClosedLoans, endTimeOffset: TimeSpan.FromDays(BookLoanTime - 1));
 
             // Act

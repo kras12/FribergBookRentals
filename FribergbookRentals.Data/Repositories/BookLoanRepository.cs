@@ -26,53 +26,70 @@ namespace FribergbookRentals.Data.Repositories
 
         public async Task<BookLoan> AddAsync(BookLoan bookLoan)
         {
+			if (await IsBookBorrowedAsync(bookLoan.User.Id, bookLoan.Book.BookId))
+			{
+				throw new BookAlreadyBorrowedException($"The user ({bookLoan.User.Id}) has already borrowed the book ({bookLoan.Book.BookId}).");
+			}
+
             _applicationDbContext.BookLoans.Add(bookLoan);
 			await _applicationDbContext.SaveChangesAsync();
             return bookLoan;
         }
 
-        public async Task<BookLoan> AddAsync(DateTime startTime, TimeSpan newEndTimeOffset, string userId, int bookId)
+        public Task<BookLoan> AddAsync(DateTime startTime, TimeSpan newEndTimeOffset, string userId, int bookId)
 		{
-			var user = _applicationDbContext.Users.Find(userId) ?? throw new Exception("User not found");
-			var book = _applicationDbContext.Books.Find(bookId) ?? throw new Exception("Book not found");
-
+			var user = _applicationDbContext.Users.Find(userId) ?? throw new UserNotFoundException("User not found");
+			var book = _applicationDbContext.Books.Find(bookId) ?? throw new BookNotFoundException("Book not found");
 			var newBookLoan = new BookLoan(startTime, startTime.Add(newEndTimeOffset), user, book);
-			_applicationDbContext.BookLoans.Add(newBookLoan);
-			await _applicationDbContext.SaveChangesAsync();
-			return newBookLoan;
+			return AddAsync(newBookLoan);
         }
 
         public async Task<BookLoan> CloseLoanAsync(BookLoan bookLoan)
 		{
-			bookLoan.ClosedTime = DateTime.Now;
+			//bookLoan.ClosedTime = DateTime.Now;
+
+            if (bookLoan.ClosedTime != null)
+            {
+                throw new BookLoanClosedException();
+            }
+
+            bookLoan.ClosedTime = DateTime.Now;
 			await _applicationDbContext.SaveChangesAsync();
 			return bookLoan;
         }
 
-        public async Task<bool> TryCloseLoanAsync(string userId, int loanId)
+        public async Task CloseLoanAsync(string userId, int loanId)
         {
-			var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId && x.ClosedTime == null).SingleOrDefaultAsync();
+			var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId).SingleOrDefaultAsync();
 
-			if (loan != null)
+			if (loan == null)
 			{
-				await CloseLoanAsync(loan);
-				return true;
-            }
+				throw new BookLoanNotFoundException();
+			}
 
-			return false;
+            if (loan.ClosedTime != null)
+			{
+				throw new BookLoanClosedException();
+			}
+
+			await CloseLoanAsync(loan);
 		}
 
-        public async Task<bool> TryProlongLoanAsync(string userId, int loanId, TimeSpan newEndTimeOffset)
+        public async Task ProlongLoanAsync(string userId, int loanId, TimeSpan newEndTimeOffset)
         {
             var loan = await _applicationDbContext.BookLoans.Where(x => x.User.Id == userId && x.Id == loanId).SingleOrDefaultAsync();
 
-            if (loan != null)
+            if (loan == null)
             {
-				await ProlongBookLoanAsync(loan, newEndTimeOffset);
-                return true;
+                throw new BookLoanNotFoundException();
             }
 
-            return false;
+            if (loan.ClosedTime != null)
+            {
+                throw new BookLoanClosedException();
+            }
+
+			await ProlongBookLoanAsync(loan, newEndTimeOffset);
         }
 
         public async Task<BookLoan?> GetBookLoanByIdAsync(int id)
