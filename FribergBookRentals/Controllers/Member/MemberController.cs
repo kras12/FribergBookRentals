@@ -60,7 +60,7 @@ namespace FribergBookRentals.Controllers.Member
 
             List<BookLoanViewModel> activeLoans = _autoMapper.Map<List<BookLoanViewModel>>(await _bookLoanRepository.GetActiveBookLoansAsync(User.Claims.Single(x => x.Type == ApplicationUserClaims.UserId).Value));
             List<BookLoanViewModel> closedLoans = _autoMapper.Map<List<BookLoanViewModel>>(await _bookLoanRepository.GetClosedBookLoansAsync(User.Claims.Single(x => x.Type == ApplicationUserClaims.UserId).Value));
-            //activeLoans = closedLoans;
+            
             var viewModel = new MemberBookLoansViewModel(activeLoans, closedLoans);
 
             if (_tempDataHelper.TryGet(TempData, BookLoanClosedResultKey, out bool isLoanClosed))

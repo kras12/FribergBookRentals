@@ -206,11 +206,6 @@ namespace WebApplication1.Areas.Identity.Pages.Account
 
         private IUserEmailStore<User> GetEmailStore()
         {
-            //if (!_userManager.SupportsUserEmail)
-            //{
-            //    throw new NotSupportedException("The default UI requires a user store with email support.");
-            //}
-
             if (_userStore is not IUserEmailStore<User>)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
